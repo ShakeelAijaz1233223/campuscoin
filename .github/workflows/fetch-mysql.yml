@@ -60,35 +60,53 @@ jobs:
             sha256sum mysql.tar.xz
             stat -c%s mysql.tar.xz
           fi
-      - name: Commit artifact via GitHub API
+      - name: Commit artifact via GitHub git data API
+        shell: python
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
-          echo "::notice::step: begin api commit; bytes=$(stat -c%s mysql.tar.xz)"
-          B64=$(base64 -w0 mysql.tar.xz)
-          echo "::notice::step: base64 length ${#B64}"
-          BLOB_SHA=$(echo "{\"content\":\"$B64\",\"encoding\":\"base64\"}" | curl -sf -X POST \
-            -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs --data @- | python3 -c "import json,sys;print(json.load(sys.stdin)['sha'])")
-          echo "::notice::step: blob uploaded $BLOB_SHA"
-          REF=$(curl -sf -H "Authorization: Bearer ${GH_TOKEN}" https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/${GITHUB_REF_NAME})
-          BASE_SHA=$(echo "$REF" | python3 -c "import json,sys;print(json.load(sys.stdin)['object']['sha'])")
-          BASE_TREE=$(curl -sf -H "Authorization: Bearer ${GH_TOKEN}" https://api.github.com/repos/${GITHUB_REPOSITORY}/git/commits/$BASE_SHA | python3 -c "import json,sys;print(json.load(sys.stdin)['tree']['sha'])")
-          echo "::notice::step: base $BASE_SHA tree $BASE_TREE"
-          TREE_SHA=$(curl -sf -X POST -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/trees --data @- <<EOF | python3 -c "import json,sys;print(json.load(sys.stdin)['sha'])"
-          {"base_tree":"$BASE_TREE","tree":[{"path":".arena-artifacts/mysql-minimal.tar.xz","mode":"100644","type":"blob","sha":"$BLOB_SHA"}]}
-EOF
-          )
-          echo "::notice::step: tree created $TREE_SHA"
-          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          COMMIT_SHA=$(curl -sf -X POST -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/commits --data @- <<EOF | python3 -c "import json,sys;print(json.load(sys.stdin)['sha'])"
-          {"message":"chore(infra): stage MySQL runtime artifact for sandbox verification [skip ci]","tree":"$TREE_SHA","parents":["$BASE_SHA"],"author":{"name":"arena-infra-relay","email":"41898282+github-actions[bot]@users.noreply.github.com","date":"$NOW"}}
-EOF
-          )
-          echo "::notice::step: commit created $COMMIT_SHA"
-          curl -sf -X POST -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/heads/${GITHUB_REF_NAME}/sha --data "{\"sha\":\"$COMMIT_SHA\"}" >/dev/null
-          echo "::notice::step: ref updated"
+          import base64, json, os, datetime
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError
+
+          token = os.environ['GH_TOKEN']
+          repo = os.environ['GITHUB_REPOSITORY']
+          ref = os.environ['GITHUB_REF_NAME']
+          api = 'https://api.github.com/repos/' + repo
+
+          def call(method, path, payload=None, raw=None):
+              data = None
+              headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json'}
+              if raw is not None:
+                  data = raw
+                  headers['Content-Type'] = 'application/octet-stream'
+              elif payload is not None:
+                  data = json.dumps(payload).encode()
+                  headers['Content-Type'] = 'application/json'
+              req = Request(api + path, data=data, headers=headers, method=method)
+              try:
+                  with urlopen(req) as resp:
+                      body = resp.read()
+                  return json.loads(body) if body else {}
+              except HTTPError as e:
+                  print('::error::' + path + ' -> HTTP ' + str(e.code) + ' ' + e.read().decode()[:400])
+                  raise
+
+          content = open('mysql.tar.xz', 'rb').read()
+          print('::notice::artifact bytes: ' + str(len(content)))
+          blob = call('POST', '/git/blobs', {'content': base64.b64encode(content).decode(), 'encoding': 'base64'})
+          print('::notice::blob uploaded ' + blob['sha'])
+          base_sha = call('GET', '/git/ref/heads/' + ref)['object']['sha']
+          base_tree = call('GET', '/git/commits/' + base_sha)['tree']['sha']
+          tree = call('POST', '/git/trees', {'base_tree': base_tree, 'tree': [
+              {'path': '.arena-artifacts/mysql-minimal.tar.xz', 'mode': '100644', 'type': 'blob', 'sha': blob['sha']}
+          ]})
+          now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          commit = call('POST', '/git/commits', {
+              'message': 'chore(infra): stage MySQL runtime artifact for sandbox verification [skip ci]',
+              'tree': tree['sha'], 'parents': [base_sha],
+              'author': {'name': 'arena-infra-relay', 'email': '41898282+github-actions[bot]@users.noreply.github.com', 'date': now}
+          })
+          print('::notice::commit created ' + commit['sha'])
+          call('PATCH', '/git/refs/heads/' + ref, {'sha': commit['sha'], 'force': False})
+          print('::notice::ref updated; relay complete')
