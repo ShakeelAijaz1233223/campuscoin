@@ -58,10 +58,16 @@ jobs:
       - name: Commit artifact to this branch
         run: |
           set -euo pipefail
+          size=$(stat -c%s mysql.tar.xz)
+          echo "::notice::artifact bytes: $size"
           git config user.name "arena-infra-relay"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           mkdir -p .arena-artifacts
           mv mysql.tar.xz .arena-artifacts/mysql-minimal.tar.xz
           git add .arena-artifacts/mysql-minimal.tar.xz
           git commit -m "chore(infra): stage MySQL runtime artifact for sandbox verification [skip ci]"
-          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}"
+          if ! git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}" 2>/tmp/push_err.txt; then
+            echo "::error title=push failed::$(tr '\n' ' ' </tmp/push_err.txt | head -c 600)"
+            exit 1
+          fi
+          echo "::notice::artifact pushed to ${GITHUB_REF_NAME}"
