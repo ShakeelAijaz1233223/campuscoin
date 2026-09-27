@@ -62,3 +62,20 @@ such as dashboard, reports, search, profile and bookmarks.
 No `/imports/validate`, `/exports/share`, `/transactions/suggest-category`, or
 `/admin/system-tips` requests are made: these were proposed endpoints that did not
 exist. Report sharing now uses the browser's PDF file share/download capability.
+
+## Validation and import consistency
+
+- Calendar validation rejects impossible dates (for example, February 30) before
+  SQL insertion. Valid leap days and the documented CSV date formats still work.
+- Failed CSV validation records a failed import and removes the uploaded file.
+  Changing a category cannot make an invalid amount/date row valid; edit and
+  revalidate the row first.
+- Confirmation, row correction and cancellation serialize on the import record.
+  Concurrent confirmations cannot double-post transactions or change a completed
+  import back to another status, including when every row is skipped.
+- Confirmation always returns `total_rows`, `imported`, `skipped`, `failed`, and
+  `duplicates_skipped`, including zero-row imports. The UI preserves server counts.
+- Empty CSV files clear any previous preview and show an error; preview controls
+  are disabled while a validation or confirmation request is in flight.
+- New budget forms inherit the selected budget month. Deleting the last item on
+  a paginated screen returns to the preceding page instead of stranding the UI.

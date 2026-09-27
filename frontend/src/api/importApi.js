@@ -2,7 +2,7 @@ import Papa from 'papaparse';
 import {request} from './apiClient';
 export const importApi={
  validate:async({rows,aiSuggestions,accountId})=>{
-  const csv=Papa.unparse(rows.map(({suggestion,...row})=>({...row,category_id:row.categoryId||''})));
+  const csv=Papa.unparse(rows.map(row=>({date:row.date,description:row.description,amount:row.amount,type:row.type,category_id:row.categoryId||'',category:row.category||'',notes:row.notes||''})));
   const form=new FormData();form.append('file',new Blob([csv],{type:'text/csv'}),'transactions.csv');form.append('account_id',String(accountId));form.append('use_ai',String(aiSuggestions));
   const d=await request('/imports/upload',{method:'POST',body:form});
   const detail=await request('/imports/'+d.import_id);
@@ -11,8 +11,8 @@ export const importApi={
  },
  confirm:async({validationId,skipDuplicates})=>{
   const d=await request(`/imports/${encodeURIComponent(validationId)}/confirm`,{method:'POST',body:{include_duplicates:!skipDuplicates,skip_duplicates:skipDuplicates}});
-  return {...d,id:validationId,status:'completed',progress:100,processed:d.total_rows??d.imported,skipped:(d.duplicates_skipped||0)+(d.failed||0)};
+  return {...d,id:validationId,status:'completed',progress:100,processed:d.total_rows??d.imported,skipped:d.skipped??((d.duplicates_skipped||0)+(d.failed||0))};
  },
- status:async id=>{const d=await request('/imports/'+encodeURIComponent(id));return {id,status:d.import.status,imported:d.import.successful_rows,processed:d.import.total_rows,progress:d.import.status==='completed'?100:0};}
+ status:async id=>{const d=await request('/imports/'+encodeURIComponent(id));return {id,status:d.import.status,imported:d.import.successful_rows,processed:d.import.total_rows,skipped:d.import.total_rows-d.import.successful_rows,message:d.import.error_message,progress:d.import.status==='completed'?100:0};}
 };
 export default importApi;

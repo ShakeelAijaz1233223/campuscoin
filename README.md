@@ -55,7 +55,9 @@ use its destructive `--force` option on data you want to preserve.
 - Month-selected dashboard, category/daily/weekly/monthly charts, date/category/
   income-source-filtered reports. PDF, CSV and JSON downloads use the same records.
 - CSV preview/edit, server validation, explicit categories or optional suggestions,
-  duplicate review and confirmed import into the selected account.
+  duplicate review and confirmed import into the selected account. Confirmation,
+  row correction and cancellation share a database lock to prevent duplicate
+  posting; failed/empty imports retain accurate status and progress.
 - Monthly insights, system tips, persistent dismissal, tip/insight bookmarks,
   notes, search, notifications/read state.
 - Admin statistics, users/access status, default categories, announcements and tips.
@@ -82,8 +84,8 @@ E2E_CONNECTED=1 npm run test:e2e # includes real browser -> API -> MySQL tests
 `NODE_ENV=test` disables rate limits for repeated integration-test logins; **do not
 use that mode for public deployments**. Backend tests set it themselves.
 
-Validation in this workspace: MySQL 5.7 compatibility runtime, 111 backend tests,
-8 frontend unit tests, and 18 passing Playwright tests (11 real-backend flows
+Validation in this workspace: MySQL 5.7 compatibility runtime, 117 backend tests,
+8 frontend unit tests, and 20 passing Playwright tests (13 real-backend flows
 and 7 isolated UI tests). Production frontend build also passes. The optional MySQL 8.4
 Compose configuration is provided for local setup, not claimed as executed here.
 

@@ -49,3 +49,13 @@ test('CSV imports into the selected non-default account with explicit category a
  const account=await api('GET',`/accounts/${a.id}`,{token:u.token});assert.equal(Number(account.data.data.account.balance),-25);
  const repeat=await api('POST',`/imports/${id}/confirm`,{token:u.token});assert.equal(repeat.status,400);
 });
+
+test('API date validation rejects overflow before reaching MySQL',async()=>{
+ const u=await registerAndLogin(),a=await createAccount(u.token);
+ const create=await api('POST','/transactions',{token:u.token,body:{account_id:a.id,type:'expense',amount:10,date:'2026-02-30',description:'Invalid day'}});
+ assert.equal(create.status,422);
+ const report=await api('GET','/reports/range?start_date=2026-02-30&end_date=2026-03-10',{token:u.token});
+ assert.equal(report.status,422);
+ const valid=await api('POST','/transactions',{token:u.token,body:{account_id:a.id,type:'expense',amount:10,date:'2028-02-29',description:'Leap day'}});
+ assert.equal(valid.status,201);
+});

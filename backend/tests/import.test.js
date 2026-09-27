@@ -136,3 +136,68 @@ test('Import is ownership-protected', async () => {
   const res = await api('GET', `/imports/${up.data.data.import_id}`, { token: b.token });
   assert.strictEqual(res.status, 404);
 });
+
+test('Failed CSV validation records a terminal failure instead of a pending import', async () => {
+  const user = await registerAndLogin();
+  const account = await createAccount(user.token);
+  const up = await upload(user.token, account.id, 'date,description,amount,type,category_id\n2026-09-01,Invalid category,10,expense,999999');
+  assert.strictEqual(up.status, 400);
+  const history = await api('GET', '/imports', { token: user.token });
+  assert.strictEqual(history.data.data.imports[0].status, 'failed');
+  assert.match(history.data.data.imports[0].error_message, /category/i);
+});
+
+test('Categorizing an invalid CSV row cannot silently mark its invalid amount valid', async () => {
+  const user = await registerAndLogin();
+  const account = await createAccount(user.token);
+  const up = await upload(user.token, account.id, 'date,description,amount,type\n2026-09-01,Bad amount,nope,expense');
+  const id = up.data.data.import_id;
+  const detail = await api('GET', `/imports/${id}`, { token: user.token });
+  const cats = await api('GET', '/categories?type=expense', { token: user.token });
+  const response = await api('PATCH', `/imports/${id}/rows/${detail.data.data.rows[0].id}`, {
+    token: user.token, body: { action: 'categorize', category_id: cats.data.data.categories[0].id }
+  });
+  assert.strictEqual(response.status, 400);
+  const after = await api('GET', `/imports/${id}`, { token: user.token });
+  assert.strictEqual(after.data.data.rows[0].status, 'invalid');
+});
+
+test('Concurrent zero-row confirmations complete only once and retain accurate progress', async () => {
+  const user = await registerAndLogin();
+  const account = await createAccount(user.token);
+  const up = await upload(user.token, account.id, 'date,description,amount,type\n2026-09-01,Skipped row,20,expense');
+  const id = up.data.data.import_id;
+  const detail = await api('GET', `/imports/${id}`, { token: user.token });
+  await api('PATCH', `/imports/${id}/rows/${detail.data.data.rows[0].id}`, { token: user.token, body: { action: 'skip' } });
+  const responses = await Promise.all([1, 2].map(() => api('POST', `/imports/${id}/confirm`, { token: user.token, body: {} })));
+  assert.deepStrictEqual(responses.map(r => r.status).sort(), [200, 400]);
+  const result = responses.find(r => r.status === 200).data.data;
+  assert.strictEqual(result.total_rows, 1);
+  assert.strictEqual(result.skipped, 1);
+  assert.strictEqual(result.imported, 0);
+  const notifications = await api('GET', '/notifications?type=import_result', { token: user.token });
+  assert.strictEqual(notifications.data.data.notifications.length, 1);
+});
+
+test('Concurrent confirmations cannot double-debit the selected account', async () => {
+  const user = await registerAndLogin();
+  const account = await createAccount(user.token, { balance: 100 });
+  const up = await upload(user.token, account.id, 'date,description,amount,type\n2026-09-01,Only once,25,expense');
+  const id = up.data.data.import_id;
+  const results = await Promise.all([1, 2].map(() => api('POST', `/imports/${id}/confirm`, { token: user.token, body: {} })));
+  assert.deepStrictEqual(results.map(r => r.status).sort(), [200, 400]);
+  const balance = await api('GET', `/accounts/${account.id}`, { token: user.token });
+  assert.strictEqual(Number(balance.data.data.account.balance), 75);
+  const detail = await api('GET', `/imports/${id}`, { token: user.token });
+  assert.strictEqual(detail.data.data.import.status, 'completed');
+  assert.strictEqual(detail.data.data.import.successful_rows, 1);
+});
+
+test('CSV numeric dates reject overflow but preserve supported date formats', () => {
+  const { parseDate } = require('../src/helpers/csvParser');
+  assert.strictEqual(parseDate('2026-02-30'), null);
+  assert.strictEqual(parseDate('02/30/2026'), null);
+  assert.strictEqual(parseDate('2028-02-29'), '2028-02-29');
+  assert.strictEqual(parseDate('27/09/2026'), '2026-09-27');
+  assert.strictEqual(parseDate('Jan 5, 2026'), '2026-01-05');
+});

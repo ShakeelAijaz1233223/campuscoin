@@ -123,7 +123,7 @@ const parseDate = (value) => {
   if (m) {
     const [, y, mo, d] = m;
     const date = new Date(Date.UTC(+y, +mo - 1, +d));
-    if (isValidDate(date, +y, +mo, +d)) return date.toISOString().split('T')[0];
+    return isValidDate(date, +y, +mo, +d) ? date.toISOString().split('T')[0] : null;
   }
 
   // DD/MM/YYYY (day-first, common in PK region)
@@ -132,7 +132,7 @@ const parseDate = (value) => {
     let [, d, mo, y] = m;
     if (+mo > 12) { [d, mo] = [mo, d]; } // swap if month/day swapped
     const date = new Date(Date.UTC(+y, +mo - 1, +d));
-    if (isValidDate(date, +y, +mo, +d)) return date.toISOString().split('T')[0];
+    return isValidDate(date, +y, +mo, +d) ? date.toISOString().split('T')[0] : null;
   }
 
   // Try native Date parsing as fallback (e.g., "Jan 5, 2026")

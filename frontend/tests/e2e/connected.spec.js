@@ -77,3 +77,31 @@ test('accounts and admin user-access/tip actions persist',async({page})=>{
  await page.goto('/admin/users');await page.getByLabel('Search users').fill(email);row=page.getByRole('row').filter({hasText:email});await row.getByRole('button',{name:'Disable',exact:true}).click();await page.getByRole('button',{name:'Confirm',exact:true}).click();await expect(row.getByRole('button',{name:'Enable',exact:true})).toBeVisible();await row.getByRole('button',{name:'Reset access',exact:true}).click();await page.getByRole('button',{name:'Confirm',exact:true}).click();await expect(row.getByRole('button',{name:'Disable',exact:true})).toBeVisible();
  const name='Connected tip '+Date.now();await openForm(page,'/admin/tips','tip');await page.getByLabel('Title',{exact:true}).fill(name);await page.getByLabel('Tip content').fill('Keep a record');await page.getByLabel('Topic').fill('General');await save(page);row=page.getByRole('row').filter({has:page.getByRole('button',{name,exact:true})});await expect(row).toContainText('Paused');await row.getByRole('button',{name:'Edit tip',exact:true}).click();await page.getByLabel('Published').check();await save(page,true);await expect(row).toContainText('Active');await row.getByRole('button',{name:'Delete tip',exact:true}).click();await page.getByRole('button',{name:'Confirm',exact:true}).click();await expect(page.getByRole('button',{name,exact:true})).not.toBeVisible();
 });
+test('new budgets use the selected month and remain visible after save',async({page})=>{
+ await session(page);
+ await page.goto('/budgets');
+ await page.getByLabel('Budget month',{exact:true}).fill('2031-04');
+ await page.getByRole('button',{name:'Add budget',exact:true}).first().click();
+ await expect(page.getByLabel('Month',{exact:true})).toHaveValue('2031-04');
+ await page.getByLabel('Expense category').selectOption({label:'Food'});
+ await page.getByLabel('Monthly limit').fill('875');
+ await save(page);
+ await expect(page.getByRole('heading',{name:'Food',exact:true})).toBeVisible();
+ const response=await page.request.get('/api/v1/budgets?month=4&year=2031');
+ const data=await response.json();
+ expect(data.data.budgets).toHaveLength(1);
+ expect(Number(data.data.budgets[0].amount)).toBe(875);
+});
+
+test('empty CSV is rejected and cannot leave a previous file ready for import',async({page})=>{
+ await session(page);
+ await page.goto('/transactions');
+ await page.getByRole('button',{name:'Import CSV',exact:true}).click();
+ const input=page.locator('input[type=file]');
+ await input.setInputFiles({name:'valid.csv',mimeType:'text/csv',buffer:Buffer.from('description,amount,type,date\nPreview only,10,expense,2026-09-01\n')});
+ await expect(page.getByRole('heading',{name:'Review 1 rows',exact:true})).toBeVisible();
+ await input.setInputFiles({name:'empty.csv',mimeType:'text/csv',buffer:Buffer.from('description,amount,type,date\n')});
+ await expect(page.getByText('CSV file contains no data rows.',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Validate with backend',exact:true})).not.toBeVisible();
+ await expect(page.getByRole('button',{name:'Confirm import',exact:true})).not.toBeVisible();
+});
