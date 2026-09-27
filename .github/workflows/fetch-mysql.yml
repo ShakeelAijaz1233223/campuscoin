@@ -31,19 +31,24 @@ jobs:
             "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.28-x86_64-minimal.tar.xz"
             "https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.7-linux-glibc2.28-x86_64-minimal.tar.xz"
             "https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.6-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.43-linux-glibc2.28-x86_64-minimal.tar.xz"
           )
-          for u in "${urls[@]}"; do
-            echo "Probing $u"
-            if curl -fsIL "$u" >/dev/null 2>&1; then
-              curl -fL --retry 3 -o mysql.tar.xz "$u"
-              echo "Downloaded $u"
-              break
-            fi
+          for attempt in 1 2 3; do
+            for u in "${urls[@]}"; do
+              echo "Attempt $attempt probing $u"
+              if curl -fsIL --retry 3 --retry-all-errors --max-time 60 "$u" >/dev/null 2>&1; then
+                if curl -fL --retry 5 --retry-all-errors --max-time 900 -o mysql.tar.xz "$u"; then
+                  echo "::notice::downloaded $u"
+                  break 2
+                fi
+              fi
+            done
+            sleep $((attempt * 10))
           done
-          test -s mysql.tar.xz || { echo 'No candidate URL succeeded'; exit 1; }
+          test -s mysql.tar.xz || { echo '::error::No candidate URL succeeded'; exit 1; }
           sha256sum mysql.tar.xz
           size=$(stat -c%s mysql.tar.xz)
-          echo "Downloaded size: $size"
+          echo "::notice::artifact bytes: $size"
           if [ "$size" -ge 90000000 ]; then
             echo 'Artifact too large for a git blob; repacking a slim server-only distribution'
             rm -rf slim && mkdir slim
