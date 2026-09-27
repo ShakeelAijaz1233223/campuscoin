@@ -1,5 +1,7 @@
 # CampusCoin
 
+Repository: [`campuscoin`](https://github.com/ShakeelAijaz1233223/campuscoin).
+
 Connected React/Vite frontend + Express API + MySQL student finance workspace.
 The browser uses **same-origin `/api/v1`**; Vite proxies it to the backend on **port 5000**.
 No mock financial data or local-storage authentication is used by the application.
