@@ -26,24 +26,35 @@ jobs:
         run: |
           set -euo pipefail
           urls=(
-            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.43-linux-glibc2.28-x86_64-minimal.tar.xz"
-            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.42-linux-glibc2.28-x86_64-minimal.tar.xz"
-            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.28-x86_64-minimal.tar.xz"
             "https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.7-linux-glibc2.28-x86_64-minimal.tar.xz"
             "https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.6-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.5-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.43-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.42-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.41-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com/archives/mysql-8.4/mysql-8.4.7-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com/archives/mysql-8.4/mysql-8.4.6-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.43-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.42-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.40-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://dev.mysql.com/get/Downloads/MySQL-8.4/mysql-8.4.7-linux-glibc2.28-x86_64-minimal.tar.xz"
             "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.43-linux-glibc2.28-x86_64-minimal.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.4/mysql-8.4.7-linux-glibc2.28-x86_64.tar.xz"
+            "https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.43-linux-glibc2.28-x86_64.tar.xz"
           )
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             for u in "${urls[@]}"; do
               echo "Attempt $attempt probing $u"
-              if curl -fsIL --retry 3 --retry-all-errors --max-time 60 "$u" >/dev/null 2>&1; then
-                if curl -fL --retry 5 --retry-all-errors --max-time 900 -o mysql.tar.xz "$u"; then
+              if curl -fsIL --retry 4 --retry-all-errors --max-time 90 "$u" >/dev/null 2>&1; then
+                if curl -fL --retry 6 --retry-all-errors --max-time 1200 -o mysql.tar.xz "$u"; then
                   echo "::notice::downloaded $u"
                   break 2
                 fi
               fi
             done
-            sleep $((attempt * 10))
+            [ -s mysql.tar.xz ] && break
+            sleep $((attempt * 15))
           done
           test -s mysql.tar.xz || { echo '::error::No candidate URL succeeded'; exit 1; }
           sha256sum mysql.tar.xz
