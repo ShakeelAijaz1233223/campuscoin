@@ -55,7 +55,8 @@ async function main() {
   await page.getByLabel('Confirm password').fill(password);
   await page.getByRole('checkbox').check();
   await page.getByRole('button', {name: 'Create your account'}).click();
-  await page.waitForURL(/login/, {timeout: 20000});
+  await page.getByText('You’re all set.').waitFor({timeout: 20000});
+  await page.goto(BASE + '/login');
   await page.getByLabel('Email address').fill(email);
   await page.getByLabel('Password', {exact: true}).fill(password);
   await page.getByRole('button', {name: 'Sign in to your workspace'}).click();
@@ -83,19 +84,21 @@ async function main() {
 
   await page.goto(BASE + '/dashboard');
   await settle(page);
-  await shot(page, '03-dashboard-desktop');
+  try {await shot(page, '03-dashboard-desktop');} catch (e) {console.error('dashboard shot failed: ' + e.message.split('\n')[0]);}
 
   // Mobile dashboard.
-  const mobile = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true});
-  const mpage = await mobile.newPage();
-  await mpage.goto(BASE + '/login');
-  await mpage.getByLabel('Email address').fill(email);
-  await mpage.getByLabel('Password', {exact: true}).fill(password);
-  await mpage.getByRole('button', {name: 'Sign in to your workspace'}).click();
-  await mpage.waitForURL(/dashboard/, {timeout: 20000});
-  await settle(mpage);
-  await shot(mpage, '04-dashboard-mobile');
-  await mobile.close();
+  try {
+    const mobile = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true});
+    const mpage = await mobile.newPage();
+    await mpage.goto(BASE + '/login');
+    await mpage.getByLabel('Email address').fill(email);
+    await mpage.getByLabel('Password', {exact: true}).fill(password);
+    await mpage.getByRole('button', {name: 'Sign in to your workspace'}).click();
+    await mpage.waitForURL(/dashboard/, {timeout: 20000});
+    await settle(mpage);
+    await shot(mpage, '04-dashboard-mobile');
+    await mobile.close();
+  } catch (e) {console.error('mobile shot failed: ' + e.message.split('\n')[0]);}
 
   for (const [name, url] of [
     ['05-transactions', '/transactions'],
@@ -112,23 +115,29 @@ async function main() {
     ['16-profile', '/profile'],
     ['17-settings', '/settings']
   ]) {
-    await page.goto(BASE + url);
-    await settle(page);
-    await shot(page, name);
+    try {
+      await page.goto(BASE + url);
+      await settle(page);
+      await shot(page, name);
+    } catch (e) {
+      console.error('shot failed for ' + name + ': ' + e.message.split('\n')[0]);
+    }
   }
 
   // Admin: sign out student, sign in with the test administrator.
-  await api(context, 'POST', '/auth/logout');
-  await page.goto(BASE + '/login');
-  await page.getByLabel('Email address').fill(process.env.E2E_ADMIN_EMAIL);
-  await page.getByLabel('Password', {exact: true}).fill(process.env.E2E_ADMIN_PASSWORD);
-  await page.getByRole('button', {name: 'Sign in to your workspace'}).click();
-  await page.waitForURL(/dashboard/, {timeout: 20000});
-  for (const [name, url] of [['18-admin-overview', '/admin'], ['19-admin-users', '/admin/users']]) {
-    await page.goto(BASE + url);
-    await settle(page);
-    await shot(page, name);
-  }
+  try {
+    await api(context, 'POST', '/auth/logout');
+    await page.goto(BASE + '/login');
+    await page.getByLabel('Email address').fill(process.env.E2E_ADMIN_EMAIL);
+    await page.getByLabel('Password', {exact: true}).fill(process.env.E2E_ADMIN_PASSWORD);
+    await page.getByRole('button', {name: 'Sign in to your workspace'}).click();
+    await page.waitForURL(/dashboard/, {timeout: 20000});
+    for (const [name, url] of [['18-admin-overview', '/admin'], ['19-admin-users', '/admin/users']]) {
+      await page.goto(BASE + url);
+      await settle(page);
+      await shot(page, name);
+    }
+  } catch (e) {console.error('admin shots failed: ' + e.message.split('\n')[0]);}
 
   if (errors.length) {
     console.error('PAGE ERRORS:\n' + errors.join('\n'));

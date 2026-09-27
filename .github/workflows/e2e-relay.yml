@@ -79,6 +79,8 @@ jobs:
       - name: Commit screenshots and e2e log via git data API
         if: always()
         shell: python
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           import base64, json, os, datetime, glob
           from urllib.request import Request, urlopen
