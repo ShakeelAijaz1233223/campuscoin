@@ -1,4 +1,5 @@
 # Runs the real Playwright suite (connected mode) plus fresh screenshot
+# (re-triggered for final verification pass)
 # capture against a real MySQL service, then commits the screenshots and the
 # e2e log back to this branch via the git data API. This exists because the
 # sandbox cannot download browser binaries; GitHub-hosted runners can.
