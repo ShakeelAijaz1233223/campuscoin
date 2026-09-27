@@ -1,0 +1,3 @@
+import {createContext,useContext,useEffect,useState} from 'react';
+export const ThemeContext=createContext(null);
+export function ThemeProvider({children}){const [theme,setTheme]=useState(()=>localStorage.getItem('cc-theme')||'dark');const [fontSize,setFontSize]=useState(()=>Number(localStorage.getItem('cc-font'))||16);useEffect(()=>{document.documentElement.dataset.theme=theme;document.documentElement.style.fontSize=fontSize+'px';localStorage.setItem('cc-theme',theme);localStorage.setItem('cc-font',fontSize);},[theme,fontSize]);return <ThemeContext.Provider value={{theme,setTheme,fontSize,setFontSize}}>{children}</ThemeContext.Provider>;}export const useTheme=()=>useContext(ThemeContext);

@@ -1,0 +1,2 @@
+import {createContext,useContext} from 'react';import useResource from '../hooks/useResource';import notificationApi from '../api/notificationApi';
+export const NotificationContext=createContext(null);export function NotificationProvider({children}){const state=useResource(notificationApi,{limit:10});return <NotificationContext.Provider value={state}>{children}</NotificationContext.Provider>;}export const useNotificationContext=()=>useContext(NotificationContext);

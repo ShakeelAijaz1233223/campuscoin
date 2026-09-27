@@ -1,0 +1,3 @@
+import transactionApi from '../api/transactionApi';
+export function normaliseTransaction(values){const body={...values};['amount'].forEach(k=>{if(body[k]!==undefined&&body[k]!==null&&body[k]!=='')body[k]=Number(body[k]);});Object.keys(body).forEach(k=>{if(body[k]==='')body[k]=null;});return body;}
+export const transactionService={create:values=>transactionApi.create(normaliseTransaction(values)),update:(id,values)=>transactionApi.update(id,normaliseTransaction(values)),remove:id=>transactionApi.remove(id),suggestCategory:(description,type)=>transactionApi.suggest({description,type})};export default transactionService;

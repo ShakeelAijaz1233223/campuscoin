@@ -1,0 +1,1 @@
+import {Badge} from '../common/UI';export default function AiConfidence({value}){return <Badge tone="violet">{Number.isFinite(Number(value))?Math.round(Number(value)*100)+'% confidence':'Confidence unavailable'}</Badge>;}

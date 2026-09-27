@@ -1,0 +1,1 @@
+export default function ParticleField({count=10}){return <div className="particle-field" aria-hidden="true">{Array.from({length:Math.min(count,24)},(_,i)=><i key={i} style={{left:((i*37+13)%100)+'%',top:((i*23+17)%100)+'%',animationDelay:-i*1.7+'s'}}/>)}</div>;}

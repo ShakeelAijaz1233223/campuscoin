@@ -1,0 +1,1 @@
+import FinancialChart from './FinancialChart';export default function IncomeExpenseChart(props){return <FinancialChart type="bar" series={[{key:'income',name:'Income'},{key:'expense',name:'Expenses'}]} {...props}/>;}

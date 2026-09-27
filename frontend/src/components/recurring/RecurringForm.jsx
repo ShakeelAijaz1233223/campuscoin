@@ -1,0 +1,1 @@
+import EntityForm from '../common/EntityForm';import {configs} from '../common/entityConfig';export default function RecurringForm(props){return <EntityForm fields={configs.recurring.fields} kind="recurring" {...props}/>;}

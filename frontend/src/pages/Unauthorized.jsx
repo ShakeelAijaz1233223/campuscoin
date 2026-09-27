@@ -1,0 +1,1 @@
+import {Link} from 'react-router-dom';export default function Unauthorized(){return <main id="main" className="full-state"><p className="eyebrow">403 · RESTRICTED WORKSPACE</p><h1>This space is off limits.</h1><p className="muted">Your account doesn’t have permission to view this page.</p><Link className="button primary" to="/dashboard">Return to your workspace ↗</Link></main>;}

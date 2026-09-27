@@ -1,0 +1,1 @@
+import ReportSummary from './ReportSummary';import ReportCharts from './ReportCharts';export default function SixMonthReport({report}){return <><ReportSummary summary={report.summary} currency={report.currency}/><ReportCharts report={report} period="six-month"/></>;}

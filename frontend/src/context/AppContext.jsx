@@ -1,0 +1,3 @@
+import {createContext,useContext,useState} from 'react';
+export const AppContext=createContext(null);
+export function AppProvider({children}){const [toasts,setToasts]=useState([]);const notify=(message,type='success')=>{const id=crypto.randomUUID();setToasts(t=>[...t,{id,message,type}]);setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),6000);};return <AppContext.Provider value={{notify}}>{children}<div className="toast-stack" aria-live="polite">{toasts.map(t=><div className={'toast '+t.type} key={t.id}>{t.message}<button aria-label="Dismiss notification" onClick={()=>setToasts(a=>a.filter(x=>x.id!==t.id))}>×</button></div>)}</div></AppContext.Provider>;}export const useApp=()=>useContext(AppContext);

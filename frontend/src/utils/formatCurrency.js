@@ -1,0 +1,1 @@
+export default function formatCurrency(value,currency='PKR'){if(value===null||value===undefined||!Number.isFinite(Number(value)))return '—';try{return new Intl.NumberFormat('en-PK',{style:'currency',currency,maximumFractionDigits:2}).format(Number(value));}catch{return `${currency} ${Number(value).toLocaleString()}`;}}

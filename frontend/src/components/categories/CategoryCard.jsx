@@ -1,0 +1,1 @@
+import {Card,Badge} from '../common/UI';export default function CategoryCard({category,actions}){return <Card className="resource-card"><div className="row between"><span className="status-dot" style={{background:category.color||'var(--accent)'}}/>{actions}</div><h3>{category.name}</h3><Badge tone={category.type==='expense'?'neutral':''}>{category.type}</Badge></Card>;}

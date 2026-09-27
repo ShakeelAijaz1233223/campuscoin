@@ -1,0 +1,1 @@
+import InsightCard from './InsightCard';import Pagination from '../common/Pagination';export default function InsightHistory({items,page,total,onPage,...rest}){return <><div className="three-grid">{items.map(i=><InsightCard key={i.id} item={i} {...rest}/>)}</div><Pagination page={page} total={total} limit={12} onChange={onPage}/></>;}

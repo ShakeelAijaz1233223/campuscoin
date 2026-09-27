@@ -1,0 +1,1 @@
+import {Link} from 'react-router-dom';export default function NotFound(){return <main id="main" className="full-state"><p className="eyebrow">404 · A SMALL DETOUR</p><h1>Not quite the right place.</h1><p className="muted">This page doesn’t exist, but your next step does.</p><Link className="button primary" to="/">Back to CampusCoin ↗</Link></main>;}

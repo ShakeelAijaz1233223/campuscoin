@@ -1,0 +1,1 @@
+import EntityForm from '../common/EntityForm';import {configs} from '../common/entityConfig';export default function CategoryForm(props){return <EntityForm fields={configs.categories.fields} kind="categories" {...props}/>;}

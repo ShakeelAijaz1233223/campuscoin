@@ -1,0 +1,1 @@
+import EntityForm from '../common/EntityForm';import {configs} from '../common/entityConfig';export default function BudgetForm(props){return <EntityForm fields={configs.budgets.fields} kind="budgets" {...props}/>;}

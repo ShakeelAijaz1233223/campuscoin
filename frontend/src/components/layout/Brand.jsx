@@ -1,0 +1,1 @@
+import {Link} from 'react-router-dom';export default function Brand(){return <Link to="/" className="brand" aria-label="CampusCoin home"><img src="/favicon/coin.svg" alt="" width="34" height="34"/><span>campus<span className="brand-light">coin</span><sup>®</sup></span></Link>;}

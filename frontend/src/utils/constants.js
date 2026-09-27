@@ -1,0 +1,1 @@
+export const INCOME_CATEGORIES=['Allowance','Part-time Job','Scholarship','Gift','Other Income'];export const EXPENSE_CATEGORIES=['Food','Transport','Hostel/Rent','Academics','Subscriptions','Entertainment','Miscellaneous'];export const FREQUENCIES=['daily','weekly','monthly','yearly'];

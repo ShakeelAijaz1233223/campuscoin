@@ -1,0 +1,1 @@
+import Card from '../common/Card';import Chart from '../charts/BudgetActualChart';export default function BudgetVsActual({data,currency,className='',actions}){return <Card className={className}><div className="panel-heading"><h2>Budget vs. actual</h2>{actions}</div><Chart data={data||[]} currency={currency}/></Card>;}

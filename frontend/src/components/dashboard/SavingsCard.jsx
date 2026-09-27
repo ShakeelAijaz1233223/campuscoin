@@ -1,0 +1,1 @@
+import {TrendingUp} from 'lucide-react';import StatCard from '../common/StatCard';import formatCurrency from '../../utils/formatCurrency';export default function SavingsCard({value,currency}){return <StatCard label="Net savings" value={formatCurrency(value,currency)} caption="A little closer to your next chapter" icon={TrendingUp}/>;}

@@ -1,0 +1,1 @@
+import Card from '../common/Card';import TransactionDetails from './TransactionDetails';export default function TransactionCard({transaction,actions}){return <Card><TransactionDetails transaction={transaction}/>{actions&&<div className="form-actions">{actions}</div>}</Card>;}

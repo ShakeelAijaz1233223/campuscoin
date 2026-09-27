@@ -1,0 +1,1 @@
+import {Sparkles} from 'lucide-react';import {Button,Input} from '../common/UI';export default function InsightGenerator({month,onMonth,onGenerate,busy}){return <><Input label="Insight month" type="month" value={month} onChange={e=>onMonth(e.target.value)}/><Button loading={busy} onClick={onGenerate}><Sparkles size={17}/>Generate insight</Button></>;}

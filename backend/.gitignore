@@ -1,0 +1,13 @@
+node_modules/
+.env
+uploads/*
+!uploads/.gitkeep
+exports/*
+!exports/.gitkeep
+logs/*
+!logs/.gitkeep
+*.log
+.DS_Store
+coverage/
+.idea/
+.vscode/

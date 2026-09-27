@@ -1,0 +1,1 @@
+import EntityForm from '../common/EntityForm';import {configs} from '../common/entityConfig';export default function GoalForm(props){return <EntityForm fields={configs.goals.fields} kind="goals" {...props}/>;}

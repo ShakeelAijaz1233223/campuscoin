@@ -1,0 +1,1 @@
+import {Navigate,Outlet} from 'react-router-dom';import useAuth from '../hooks/useAuth';import {isAdmin} from '../utils/permissions';export default function AdminRoute(){const {user}=useAuth();return isAdmin(user)?<Outlet/>:<Navigate to="/unauthorized" replace/>;}

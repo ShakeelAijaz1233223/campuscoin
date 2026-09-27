@@ -1,0 +1,1 @@
+import Card from '../common/Card';import Chart from '../charts/CategoryChart';export default function TopCategory({data,currency,className='',actions}){return <Card className={className}><div className="panel-heading"><h2>Top categories</h2>{actions}</div><Chart data={data||[]} currency={currency}/></Card>;}

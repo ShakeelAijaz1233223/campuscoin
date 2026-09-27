@@ -1,0 +1,1 @@
+import Card from '../common/Card';import Chart from '../charts/IncomeExpenseChart';export default function MonthlyOverview({data,currency,className='',actions}){return <Card className={className}><div className="panel-heading"><h2>Monthly overview</h2>{actions}</div><Chart data={data||[]} currency={currency}/></Card>;}

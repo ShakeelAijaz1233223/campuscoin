@@ -1,0 +1,1 @@
+import FinancialChart from './FinancialChart';export default function BudgetActualChart(props){return <FinancialChart type="bar" series={[{key:'budget',name:'Budget'},{key:'actual',name:'Actual'}]} {...props}/>;}

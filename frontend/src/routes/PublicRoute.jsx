@@ -1,0 +1,1 @@
+import {Navigate,Outlet,useLocation} from 'react-router-dom';import useAuth from '../hooks/useAuth';export default function PublicRoute(){const {user}=useAuth();const {state}=useLocation();const target=state?.from?.startsWith('/')&&!state.from.startsWith('//')?state.from:'/dashboard';return user?<Navigate to={target} replace/>:<Outlet/>;}
