@@ -48,6 +48,10 @@ const register = async ({ email, password, first_name, last_name, academic_year,
     );
 
     return userId;
+  }).catch(error => {
+    // The unique email constraint is authoritative when submissions race.
+    if (error.code === 'ER_DUP_ENTRY') throw new ConflictError('An account with this email already exists');
+    throw error;
   });
 
   const user = await UserModel.findById(result);
@@ -129,6 +133,10 @@ const resetPassword = async ({ token, password }) => {
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   await db.transaction(async (conn) => {
+    // Serialize resets for this user, then re-check the token under the lock.
+    await conn.execute('SELECT id FROM users WHERE id = ? FOR UPDATE', [reset.user_id]);
+    const [valid] = await conn.execute('SELECT id FROM password_resets WHERE id = ? AND used = 0 AND expires_at > NOW() FOR UPDATE', [reset.id]);
+    if (!valid.length) throw new BadRequestError('Invalid or expired reset token');
     await conn.execute('UPDATE users SET password_hash = ?, failed_login_attempts = 0, locked_until = NULL WHERE id = ?', [passwordHash, reset.user_id]);
     await conn.execute('UPDATE password_resets SET used = 1 WHERE id = ?', [reset.id]);
     // Invalidate all other outstanding tokens for this user

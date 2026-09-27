@@ -15,6 +15,12 @@ proxy (development/preview) or a production reverse proxy. Default API port: 500
 - Tokens are not stored in browser local/session storage. Authorization and record
   ownership are enforced on the backend, not just by route guards.
 
+Registration/reset share the 8+ character, uppercase/lowercase/number password
+policy. Name and academic-year conversion live in `api/contract.js`; optional
+blank academic year is omitted so the API can apply its default. Registration
+returns a JWT but intentionally asks the user to sign in before browser session
+creation. Standalone Bearer tokens are stateless and expire according to JWT TTL.
+
 ## Wire endpoints (snake_case)
 
 | Area | Actual endpoint / payload |

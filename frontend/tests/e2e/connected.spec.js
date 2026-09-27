@@ -105,3 +105,62 @@ test('empty CSV is rejected and cannot leave a previous file ready for import',a
  await expect(page.getByRole('button',{name:'Validate with backend',exact:true})).not.toBeVisible();
  await expect(page.getByRole('button',{name:'Confirm import',exact:true})).not.toBeVisible();
 });
+
+test('registration policy, SQL persistence, login, authenticated dashboard and UI logout',async({page})=>{
+ const email=`test-agent-${Date.now()}@example.com`,password='Abcdef12';
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ let submissions=0;page.on('request',r=>{if(r.url().endsWith('/auth/register')&&r.method()==='POST')submissions++;});
+ await page.goto('/register');
+ await page.getByLabel('Full name').fill('Verified Student');
+ await page.getByLabel('Email address').fill(email);
+ await page.getByLabel('Password',{exact:true}).fill('onlylowercase12');
+ await page.getByLabel('Confirm password').fill('onlylowercase12');
+ await page.getByRole('checkbox').check();
+ await page.getByRole('button',{name:'Create your account'}).click();
+ await expect(page.getByRole('alert')).toContainText('uppercase letter');expect(submissions).toBe(0);
+ await page.getByLabel('Password',{exact:true}).fill(password);
+ await page.getByLabel('Confirm password').fill(password);
+ // Academic year and monthly allowance are optional, just as on the backend.
+ const response=page.waitForResponse(r=>r.url().endsWith('/auth/register')&&r.request().method()==='POST');
+ await page.getByRole('button',{name:'Create your account'}).click();
+ const registered=await response;expect(registered.status()).toBe(201);
+ const user=(await registered.json()).data.user;
+ await expect(page.getByText('You’re all set.')).toBeVisible();
+ // Query the same MySQL DB as the test API; no browser/API interception.
+ const {createRequire}=await import('node:module');const require=createRequire(import.meta.url);
+ const db=require('../../../backend/src/config/database');
+ try {
+  const record=await db.getOne('SELECT u.id, u.password_hash, p.first_name, p.last_name, p.academic_year FROM users u JOIN profiles p ON p.user_id = u.id WHERE u.id = ? AND u.email = ?',[user.id,email]);
+  expect(record.first_name).toBe('Verified');expect(record.last_name).toBe('Student');expect(record.academic_year).toBe('freshman');
+  expect(await require('../../../backend/node_modules/bcryptjs').compare(password,record.password_hash)).toBe(true);
+  const accounts=await db.query('SELECT balance, is_default FROM accounts WHERE user_id = ?',[user.id]);
+  expect(accounts).toHaveLength(1);expect(Number(accounts[0].balance)).toBe(0);
+  expect(Number((await db.getOne('SELECT COUNT(*) AS n FROM transactions WHERE user_id = ?',[user.id])).n)).toBe(0);
+  expect(Number((await db.getOne("SELECT COUNT(*) AS n FROM activities WHERE user_id = ? AND action = 'registered'",[user.id])).n)).toBe(1);
+ } finally {await db.pool.end();}
+ await page.getByRole('link',{name:/Back to sign in/}).click();
+ await page.getByLabel('Email address').fill(email);await page.getByLabel('Password',{exact:true}).fill(password);
+ await page.getByRole('button',{name:'Sign in to your workspace'}).click();await expect(page).toHaveURL(/dashboard/);
+ const cookie=(await page.context().cookies()).find(c=>c.name==='campuscoin_session');expect(cookie.httpOnly).toBe(true);
+ expect(await page.evaluate(()=>Object.keys(localStorage).some(k=>/token|session/i.test(k)))).toBe(false);
+ const me=await page.request.get('/api/v1/auth/me');expect(me.status()).toBe(200);expect((await me.json()).data.user.email).toBe(email);
+ const dashboard=await page.request.get('/api/v1/dashboard');expect(dashboard.status()).toBe(200);expect((await dashboard.json()).data.balance.total).toBe(0);
+ await page.reload();await expect(page).toHaveURL(/dashboard/);
+ await page.getByRole('button',{name:/Sign out|Log out/i}).click();
+ await expect(page).toHaveURL(/login|^http[^/]+\/$/);
+ expect((await page.context().cookies()).some(c=>c.name==='campuscoin_session')).toBe(false);
+ expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401);
+ expect(errors).toEqual([]);
+});
+
+
+test('sign out clears stale UI state when the browser session is already gone',async({page})=>{
+ await session(page);
+ // Let dashboard requests finish before simulating expiry; otherwise a pending
+ // protected request correctly redirects before the sign-out button can be used.
+ await expect(page.getByText('YOUR TOTAL BALANCE',{exact:true})).toBeVisible();
+ await page.waitForLoadState('networkidle');
+ await page.context().clearCookies();
+ await page.getByRole('button',{name:'Sign out',exact:true}).click();
+ await expect(page).toHaveURL(/login/);
+});

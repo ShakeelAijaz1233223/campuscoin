@@ -1,9 +1,9 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 
 const env = {
   PORT: process.env.PORT || 5000,
   NODE_ENV: process.env.NODE_ENV || 'development',
-  DB_HOST: process.env.DB_HOST || 'localhost',
+  DB_HOST: process.env.DB_HOST || '127.0.0.1',
   DB_PORT: parseInt(process.env.DB_PORT) || 3306,
   DB_NAME: process.env.DB_NAME || 'campuscoin',
   DB_USER: process.env.DB_USER || 'root',

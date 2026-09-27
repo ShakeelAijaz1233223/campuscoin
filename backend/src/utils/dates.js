@@ -1,6 +1,6 @@
 const getMonthRange = (year, month) => {
-  const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0);
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 0));
   return {
     startDate: start.toISOString().split('T')[0],
     endDate: end.toISOString().split('T')[0]
@@ -67,15 +67,19 @@ const getMonthName = (month) => {
   return names[month - 1] || `Month ${month}`;
 };
 
+// DATE columns are calendar values, not local-midnight timestamps. Work in UTC
+// and clamp month/year steps so January 31 does not skip February entirely.
 const getNextOccurrence = (frequency, currentDate) => {
-  const d = new Date(currentDate);
-  switch (frequency) {
-    case 'daily': d.setDate(d.getDate() + 1); break;
-    case 'weekly': d.setDate(d.getDate() + 7); break;
-    case 'biweekly': d.setDate(d.getDate() + 14); break;
-    case 'monthly': d.setMonth(d.getMonth() + 1); break;
-    case 'quarterly': d.setMonth(d.getMonth() + 3); break;
-    case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
+  const d = new Date(String(currentDate).slice(0, 10) + 'T00:00:00Z');
+  const days = { daily: 1, weekly: 7, biweekly: 14 };
+  const months = { monthly: 1, quarterly: 3, yearly: 12 };
+  if (days[frequency]) d.setUTCDate(d.getUTCDate() + days[frequency]);
+  if (months[frequency]) {
+    const day = d.getUTCDate();
+    d.setUTCDate(1);
+    d.setUTCMonth(d.getUTCMonth() + months[frequency]);
+    const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+    d.setUTCDate(Math.min(day, last));
   }
   return d.toISOString().split('T')[0];
 };

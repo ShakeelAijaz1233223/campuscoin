@@ -17,8 +17,8 @@ React.js Frontend → HTTP → Express Router → Auth → Authorization → Val
 
 | Tool | Version |
 |------|---------|
-| Node.js | **>= 18.0.0** (built & tested on 20.x) |
-| MySQL | **8.0+** (MariaDB 10.6+ also works) |
+| Node.js | **>= 20** (workspace tested on Node 22) |
+| MySQL | **8.0+ recommended**; local compatibility tests used MySQL 5.7.29 |
 | npm | >= 9 |
 
 ## 2. Quick Start
@@ -33,7 +33,7 @@ cp .env.example .env        # then edit DB credentials + JWT_SECRET
 # 3. Create database & tables
 npm run migrate
 
-# 4. Load development seed data
+# 4. Optional reference-data repair (no users or financial activity)
 npm run seed
 
 # 5. Start
@@ -69,23 +69,21 @@ See `.env.example`. Key variables:
 | Command | Action |
 |---------|--------|
 | `npm run migrate` | Create database + apply `database/schema.sql` + `database/indexes.sql` |
-| `npm run seed` | Load dev/test data (idempotent; `--force` to wipe & reseed) |
-| `npm run reset` | Drop, recreate, migrate and seed the database |
+| `npm run seed` | Idempotent categories/settings/tips only; sample data requires `-- --demo`; destructive `--force` rejected |
+| `npm run reset` | Destructive development-only reset, requires `-- --confirm=<database_name>` |
 | `npm run create-admin` | `node scripts/create-admin.js <email> <password> [first] [last]` |
 | `npm run create-test-user` | `node scripts/create-test-user.js [email] [password]` |
-| `npm test` | Run the full test suite (106 tests) |
+| `npm test` | Run backend tests against disposable `campuscoin_test` |
 | `npm run dev` / `npm start` | Dev / production server |
 
-## 5. Test Credentials (seed data)
+## 5. Accounts and real data
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@campuscoin.com` | `Admin@123` |
-| Student | `student@campuscoin.com` | `Student@123` |
-
-The seeded student comes with accounts, 2 months of transactions, budgets, goals + contributions, bills, recurring rules, tips, an insight, and notifications — so every dashboard widget has real data immediately.
-
-> These are development/test credentials only. Never use them in production.
+Normal setup creates no user or financial sample data. Register via the frontend.
+For admin bootstrap, set `ADMIN_EMAIL`/`ADMIN_PASSWORD` and run `npm run create-admin`,
+or supply explicit email/password arguments. No default administrator is created.
+The optional `seed -- --demo` and `create-test-user` scripts are for disposable
+local databases only; their sample records are not real financial data. Never
+use them to populate a real user workspace. Production blocks both demo modes.
 
 ## 6. API Base URL & Endpoint Groups
 
@@ -120,22 +118,16 @@ Base URL: **`/api/v1`**
 
 ## 7. Frontend Connection
 
-```js
-// React example
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+The frontend uses `VITE_API_BASE_URL=/api/v1`, Vite port **5173**, and
+`API_PROXY_TARGET=http://127.0.0.1:5000`. No browser request targets a sandbox's
+localhost. `frontend/src/api/apiClient.js` sends JSON, cookies, and
+`X-Requested-With: CampusCoin` automatically. Login stores the JWT in an HttpOnly
+cookie, not localStorage. `/auth/me` restores the user after reload; unauthenticated
+401s are expected. Bearer headers are supported for standalone API clients.
 
-const res = await fetch(`${API}/auth/login`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password })
-});
-const { data } = await res.json();
-localStorage.setItem('token', data.token);
-// Subsequent requests:
-headers: { Authorization: `Bearer ${token}` }
-```
-
-Set `CLIENT_URL` in the backend `.env` to the frontend origin (e.g. `http://localhost:3000`) so CORS allows it. Multiple origins: comma-separate them.
+Set `CLIENT_URL=http://localhost:5173` for local direct-origin CORS. Multiple
+origins may be comma-separated. Production should use a same-origin HTTPS proxy.
+See the [wire contract](../frontend/docs/API_CONTRACT.md).
 
 ### Standard response envelope
 
@@ -191,16 +183,17 @@ The server runs an in-process scheduler (hourly + shortly after boot):
 - Input validation on every route (express-validator) + XSS-input sanitization middleware.
 - Per-resource ownership checks; role authorization (`admin`) on every admin route.
 - Upload validation: CSV extension/MIME filter, 5 MB cap.
-- Passwords/hashes/tokens are never returned in any response; path-traversal-safe downloads; audit logging via `activities`.
-- Password reset: hashed tokens, single use, expiry, all sessions of that token invalidated after use. Token is returned only outside production for testability.
+- Password hashes are never returned; registration/login return a JWT for API clients; path-traversal-safe downloads; audit logging via `activities`.
+- Password reset: hashed tokens, single use, expiry, all outstanding reset tokens invalidated after use; concurrent reuse is rejected. Token is returned only outside production for testability.
 
 ## 12. Testing
 
 ```bash
-npm test        # requires MySQL up + npm run migrate && npm run seed
+DB_NAME=campuscoin_test npm run migrate
+npm test        # defaults to the disposable campuscoin_test database
 ```
 
-106 tests across 13 suites: auth (register/login/logout/forgot/reset/suspended/admin), profile, categories, transactions (CRUD, filters, duplicates, AI, ownership), recurring (generation + idempotency), budgets (spent/remaining/alerts/exceeded), goals (milestones/completion), bills (overdue/upcoming/pay), reports (monthly/range/PDF magic-bytes/leak-check), CSV import (full pipeline, errors, duplicates, ownership), insights/tips/bookmarks/notes, admin (users, categories, announcements, tips, statistics), security (invalid/expired/forged tokens, SQL injection, XSS, cross-user access, role escalation).
+127 backend tests: auth (register/login/logout/forgot/reset/suspended/admin), profile, categories, transactions (CRUD, filters, duplicates, AI, ownership), recurring (generation + idempotency), budgets (spent/remaining/alerts/exceeded), goals (milestones/completion), bills (overdue/upcoming/pay), reports (monthly/range/PDF magic-bytes/leak-check), CSV import (full pipeline, errors, duplicates, ownership), insights/tips/bookmarks/notes, admin (users, categories, announcements, tips, statistics), security (invalid/expired/forged tokens, SQL injection, XSS, cross-user access, role escalation).
 
 Tests run with `NODE_ENV=test` (rate limiting no-oped, fast bcrypt rounds) and spin up the app on an ephemeral port.
 
@@ -218,13 +211,13 @@ Tests run with `NODE_ENV=test` (rate limiting no-oped, fast bcrypt rounds) and s
 |---------|-----|
 | `MySQL connection failed` | Check `DB_HOST/DB_PORT/DB_USER/DB_PASSWORD` in `.env`; ensure MySQL is running |
 | `ER_DUP_KEYNAME` during migrate | Harmless — indexes already exist (script auto-skips) |
-| `Database already contains users` on seed | Expected — use `npm run seed -- --force` to reseed |
-| Port 5000 in use | Change `PORT` in `.env` |
+| Existing database | `migrate`/default `seed` preserve users and finances; never force reseed |
+| Port 5000 in use | Change backend `PORT` and frontend `API_PROXY_TARGET` together |
 | 401 after restart | JWT secret changed or token expired — log in again |
 | CSV import "Invalid account" | Pass `account_id` of one of your accounts in the upload form |
 | PDF link expired | Report files auto-clean after 30 min — regenerate |
-| Tests fail connecting | Start MySQL, run `npm run migrate && npm run seed` first |
+| Tests fail connecting | Start MySQL, run `DB_NAME=campuscoin_test npm run migrate` first |
 
 ## 15. Project Structure
 
-See the repository tree — every layer (`routes → controllers → services → models → MySQL`) is fully connected; no placeholders, TODOs, or fake data. SRS coverage: authentication, profile, categories, transactions, recurring, budgets, goals, bills, dashboard, analytics, reports + PDF, AI insights, saving tips, bookmarks, notes, notifications, CSV import, exports, search, settings, content, admin, forecast, recent activity, unusual/duplicate detection, and full security architecture.
+Architecture: `routes → controllers → services → models → MySQL`. See the root audit report for executed coverage and limitations. Endpoint groups: authentication, profile, categories, transactions, recurring, budgets, goals, bills, dashboard, analytics, reports + PDF, AI insights, saving tips, bookmarks, notes, notifications, CSV import, exports, search, settings, content, admin, forecast, recent activity, unusual/duplicate detection, and full security architecture.

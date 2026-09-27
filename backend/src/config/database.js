@@ -16,6 +16,14 @@ const pool = mysql.createPool({
   dateStrings: true
 });
 
+// mysql2's timezone option controls JS serialization, not MySQL NOW()/CURDATE().
+// Keep database timestamps and reset-token expiry in the same UTC time frame.
+pool.on('connection', connection => {
+  connection.query("SET time_zone = '+00:00'", error => {
+    if (error) { logger.error('Cannot initialize database time zone', error.message); connection.destroy(); }
+  });
+});
+
 const testConnection = async () => {
   try {
     const conn = await pool.getConnection();

@@ -14,7 +14,7 @@ export function payload(path, values={}) {
   if ('name' in values && (path.startsWith('/auth/')||path==='/profile')) {
     const [first,...last]=values.name.trim().split(/\s+/); b.first_name=first;b.last_name=last.join(' ');delete b.name;
   }
-  if(values.academicYear)b.academic_year=years[values.academicYear];
+  if('academicYear' in values){if(values.academicYear)b.academic_year=years[values.academicYear]||values.academicYear;else delete b.academic_year;}
   if('savingsGoal' in values){b.monthly_savings_goal=values.savingsGoal;delete b.savings_goal;}
   if('body' in values){b.content=values.body;delete b.body;}
   if('published' in values){b.is_active=values.published;delete b.published;}

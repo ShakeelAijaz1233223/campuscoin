@@ -6,6 +6,6 @@ export function AuthProvider({children}){
  const check=async()=>{setLoading(true);setError(null);try{const d=await authApi.me();setUser(d.user||d);}catch(e){setUser(null);if(e.status!==401)setError(e);}finally{setLoading(false);}};
  useEffect(()=>{check();const expire=()=>{setUser(null);setExpired(true);};window.addEventListener('session-expired',expire);return()=>window.removeEventListener('session-expired',expire);},[]);
  const login=async(values)=>{const d=await authApi.login(values);if(!d.user)throw new Error('The login response must include a user.');setUser(d.user);setExpired(false);return d.user;};
- const logout=async()=>{await authApi.logout();setUser(null);};
+ const logout=async()=>{try{await authApi.logout();}catch(e){if(e.status!==401)throw e;}setUser(null);setExpired(false);};
  return <AuthContext.Provider value={{user,setUser,loading,error,expired,login,logout,check}}>{children}</AuthContext.Provider>;
 }

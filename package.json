@@ -9,7 +9,7 @@
     "db:seed": "npm --prefix backend run seed",
     "build": "npm --prefix frontend run build",
     "test": "npm --prefix backend test && npm --prefix frontend test",
-    "test:e2e": "npm --prefix frontend run test:e2e"
+    "test:e2e": "npm --prefix frontend run test:e2e --"
   },
   "engines": {"node": ">=20"}
 }

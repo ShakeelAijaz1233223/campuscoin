@@ -21,3 +21,9 @@ test('pagination metadata and numeric SQL values reach the UI',()=>{
 test('filters retain server names, direction, month and unread boolean',()=>{
  assert.deepEqual(filters({q:'lunch',sort:'-amount',month:'2026-09',read:false,from:'2026-09-01'}),{search:'lunch',sort:'amount',order:'DESC',month:9,year:2026,is_read:0,start_date:'2026-09-01'});
 });
+
+test('optional and canonical academic years are not sent as invalid values',()=>{
+ assert.equal(payload('/auth/register',{name:'Solo',academicYear:''}).academic_year,undefined);
+ assert.equal(payload('/auth/register',{name:'Solo',academicYear:'senior'}).academic_year,'senior');
+ for(const [year,expected] of Object.entries({'1':'freshman','2':'sophomore','3':'junior','4':'senior','5':'other',postgraduate:'graduate'}))assert.equal(payload('/auth/register',{academicYear:year}).academic_year,expected);
+});

@@ -25,8 +25,8 @@ If port 3306 is already in use, use your existing server or change the port mapp
 and `DB_PORT` together.
 
 ```sh
-npm run db:migrate
-npm run db:seed       # development/sample data; run before registering users
+npm run db:migrate   # schema, indexes, essential reference categories/settings/tips
+npm run db:seed      # optional, idempotent reference-data repair; no demo finances
 npm run dev          # starts API :5000 and frontend :5173
 ```
 
@@ -35,16 +35,36 @@ be running. The API intentionally refuses to start when MySQL is unavailable.
 If changing the backend port, update `API_PROXY_TARGET` in `frontend/.env` and
 restart Vite. Do not set a browser API URL to a sandbox's localhost.
 
-### Development demo logins
+### Real data by default
 
-| Role | Email | Password |
-|---|---|---|
-| Student | `student@campuscoin.com` | `Student@123` |
-| Admin | `admin@campuscoin.com` | `Admin@123` |
+Normal setup creates **no demo users, balances, transactions, goals or insights**.
+Register your own account; its Cash Wallet starts at zero. Dashboards and reports
+read saved MySQL records. Reference categories and educational tips are not
+financial activity. Existing user records are not deleted or rewritten by setup.
 
-These are public **development-only** seed accounts. Never run the demo seed on a
-production database. The seed skips a database already containing users; do not
-use its destructive `--force` option on data you want to preserve.
+For an administrator, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the ignored
+`backend/.env`, then run `npm --prefix backend run create-admin`. There are no
+default administrator credentials. Remove those bootstrap variables afterward.
+
+Legacy sample data is available only via explicit `npm --prefix backend run seed
+-- --demo` against an **empty, disposable development database**. It was not used
+for this audit. `--force` seeding is rejected. Never run `reset` on real data;
+reset now requires `--confirm=<database_name>` and is blocked in production.
+
+### Registration and sessions
+
+Passwords require **8+ characters, uppercase, lowercase and a number** on both
+registration and reset forms. The name adapter sends `first_name`/`last_name`;
+academic year is optional and maps UI year labels to the API enum. The form shows
+validation details instead of hiding a 422. Duplicate email is a 409, including
+concurrent submissions. Registration creates a user/profile/zero-balance account;
+sign in afterward to establish the browser session.
+
+An anonymous `/auth/me` returning **401 is expected**. Login sets an **HttpOnly
+JWT cookie** automatically sent by `credentials: include`; reload restores it.
+No JWT is placed in localStorage/sessionStorage. Separate API clients can use
+the returned token as `Authorization: Bearer <token>`. Browser logout clears its
+cookie and auth state; existing standalone Bearer tokens remain valid until expiry.
 
 ## Connected features
 
@@ -73,23 +93,34 @@ camelCase UI models and preserves pagination totals.
 Use a **disposable test database**. Integration tests create users and records.
 
 ```sh
-npm test                       # real-DB backend tests + frontend unit tests
+# Shell examples (use the equivalent environment syntax on Windows):
+DB_NAME=campuscoin_test npm run db:migrate
+npm test                       # backend defaults to campuscoin_test + frontend units
 cd frontend
 npx playwright install --with-deps chromium
 npm run test:e2e                # isolated UI fixtures; connected tests skipped
-# With a migrated/seeded database and API running in NODE_ENV=test:
-E2E_CONNECTED=1 npm run test:e2e # includes real browser -> API -> MySQL tests
 ```
 
-`E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` may override demo admin credentials.
+For connected browser tests, run the API with `NODE_ENV=test` and
+`DB_NAME=campuscoin_test`, and the Vite frontend. Create a test administrator using
+`create-admin` **in that same disposable database**. Then run from the repo root:
+
+```sh
+E2E_CONNECTED=1 DB_NAME=campuscoin_test E2E_ADMIN_EMAIL=<test-admin-email> E2E_ADMIN_PASSWORD=<test-admin-password> npm run test:e2e
+```
+
+The API and browser test runner must target the **same test database**: one
+browser test directly verifies its registration in SQL. Fixtures exist only in
+the test DB/test code, never as application fallback data.
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an installed Chromium executable.
 `NODE_ENV=test` disables rate limits for repeated integration-test logins; **do not
-use that mode for public deployments**. Backend tests set it themselves.
+use that mode for public deployments**. No lint script is defined.
 
-Validation in this workspace: MySQL 5.7 compatibility runtime, 117 backend tests,
-8 frontend unit tests, and 20 passing Playwright tests (13 real-backend flows
-and 7 isolated UI tests). Production frontend build also passes. The optional MySQL 8.4
-Compose configuration is provided for local setup, not claimed as executed here.
+Latest audit: **127 backend tests, 11 frontend unit tests, 22 Playwright tests
+(15 real-backend flows + 7 isolated UI tests), production build**. MySQL 5.7.29
+was used as a local compatibility runtime; the optional MySQL 8.4 Compose service
+was not executed. See [the end-to-end audit](docs/END_TO_END_AUDIT.md) for scope,
+SQL verification, and remaining deployment dependencies.
 
 ## Production and external services
 

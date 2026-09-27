@@ -171,7 +171,7 @@ const buildSavingTips = ({ totalExpense, categorySpending, budgets, profile }) =
   if (tips.length === 0) {
     tips.push({
       title: 'Keep tracking!',
-      content: 'Your spending is well balanced this month. Keep recording transactions for better insights.',
+      content: 'Record your income and expenses to build a clearer picture of your finances.',
       potential_savings: 0,
       category: 'general'
     });

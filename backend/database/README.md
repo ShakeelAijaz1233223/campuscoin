@@ -1,6 +1,6 @@
 # CampusCoin Database
 
-MySQL 8.0+ (or MariaDB 10.6+) schema for the CampusCoin student finance platform.
+MySQL schema (8.0+ recommended; tested locally on MySQL 5.7.29) for the CampusCoin student finance platform.
 
 ## Files
 
@@ -8,13 +8,14 @@ MySQL 8.0+ (or MariaDB 10.6+) schema for the CampusCoin student finance platform
 |------|---------|
 | `schema.sql` | All 26 tables: users, profiles, password_resets, accounts, categories, transactions, recurring_transactions, budgets, goals, goal_contributions, bills, insights, tips, tip_bookmarks, insight_bookmarks, notes, notifications, announcements, imports, import_rows, ai_category_suggestions, ai_correction_history, activities, settings, analytics_snapshots, system_settings |
 | `indexes.sql` | Additional composite performance indexes |
-| `seed.sql` | Alternative raw SQL seed (the `npm run seed` script is the recommended, bcrypt-safe seeder) |
+| `defaults.js` | Idempotent reference categories/settings/educational tips; no user financial data |
+| `seed.sql` | Legacy sample SQL, not used by normal setup; do not apply to real databases |
 
 ## Apply
 
 ```bash
-npm run migrate   # creates DB + schema + indexes
-npm run seed      # loads admin, student, categories, sample data
+npm run migrate   # creates missing tables/indexes + reference data; preserves records
+npm run seed      # optional idempotent reference-data repair, no demo finances
 ```
 
 ## Design Rules
@@ -49,4 +50,7 @@ USERS 1─N ANALYTICS_SNAPSHOTS
 
 ## Credentials Note
 
-The seed script creates test accounts with bcrypt-hashed passwords. See the root README for credentials. Never seed real personal data.
+Register real users through the UI. Admin bootstrap requires explicit credentials.
+Sample accounts/data require `seed -- --demo` on an empty disposable development
+database. Destructive `--force` seeding is disabled; never reset an existing real DB.
+Backend timestamps and password-reset expiry use UTC MySQL sessions.

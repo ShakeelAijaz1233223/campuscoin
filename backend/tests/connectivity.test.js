@@ -59,3 +59,45 @@ test('API date validation rejects overflow before reaching MySQL',async()=>{
  const valid=await api('POST','/transactions',{token:u.token,body:{account_id:a.id,type:'expense',amount:10,date:'2028-02-29',description:'Leap day'}});
  assert.equal(valid.status,201);
 });
+
+test('frontend registration payload creates real, hashed, zero-balance MySQL records',async()=>{
+ const {payload}=await import('../../frontend/src/api/contract.js');
+ const {uniqueEmail,getDb}=require('./helpers');
+ const email=uniqueEmail('test-agent'),password='Abcdef12';
+ const body=payload('/auth/register',{name:'Real Integration',email,password,academicYear:'postgraduate',monthlyAllowance:4321});
+ assert.deepEqual({first:body.first_name,last:body.last_name,year:body.academic_year},{first:'Real',last:'Integration',year:'graduate'});
+ const reg=await api('POST','/auth/register',{body});assert.equal(reg.status,201);
+ const id=reg.data.data.user.id,db=getDb();
+ try {
+  const [[u]]=await db.execute('SELECT * FROM users WHERE id = ? AND email = ?',[id,email]);
+  assert.ok(u);assert.notEqual(u.password_hash,password);assert.ok(await require('bcryptjs').compare(password,u.password_hash));
+  const [[p]]=await db.execute('SELECT * FROM profiles WHERE user_id = ?',[id]);
+  assert.equal(p.first_name,'Real');assert.equal(p.last_name,'Integration');assert.equal(p.academic_year,'graduate');assert.equal(Number(p.monthly_allowance),4321);
+  const [accounts]=await db.execute('SELECT * FROM accounts WHERE user_id = ?',[id]);
+  assert.equal(accounts.length,1);assert.equal(Number(accounts[0].balance),0);assert.equal(accounts[0].is_default,1);
+  const [[counts]]=await db.execute("SELECT (SELECT COUNT(*) FROM transactions WHERE user_id = ?) AS txs, (SELECT COUNT(*) FROM activities WHERE user_id = ? AND action = 'registered') AS registrations, (SELECT COUNT(*) FROM categories WHERE user_id IS NULL AND is_default = 1 AND status = 'active') AS categories",[id,id]);
+  assert.equal(counts.txs,0);assert.equal(counts.registrations,1);assert.ok(counts.categories>=12);
+  assert.equal((await api('GET','/auth/me',{token:reg.data.data.token})).status,200);
+ } finally {await db.end();}
+});
+
+test('fresh users can load every main API collection and all analytics without demo records',async()=>{
+ const {token}=await registerAndLogin();
+ for(const path of ['/auth/me','/profile','/profile/preferences','/accounts','/categories','/categories/defaults','/transactions','/recurring-transactions','/budgets','/budgets/alerts','/goals','/bills','/bills/upcoming','/bills/overdue','/dashboard','/dashboard/forecast','/reports/monthly','/insights','/insights/latest','/tips','/tips/personalized','/bookmarks','/notes','/notifications','/notifications/unread-count','/imports','/settings','/content/announcements','/content/tips','/search?q=Food','/ai/status','/ai/corrections','/ai/suggestions',...['category-spending','daily-spending','weekly-spending','monthly-spending','six-month-overview','historical-averages','category-growth','trends','budget-consumption','savings-rate'].map(p=>'/analytics/'+p)]){
+  const r=await api('GET',path,{token});assert.equal(r.status,200,`${path}: ${JSON.stringify(r.data)}`);
+ }
+ const dashboard=await api('GET','/dashboard',{token});
+ assert.equal(dashboard.data.data.balance.total,0);assert.equal(dashboard.data.data.month_summary.income,0);assert.equal(dashboard.data.data.month_summary.expense,0);assert.deepEqual(dashboard.data.data.recent_transactions,[]);
+});
+
+test('health and localhost CORS preflight are configured for cookie and Bearer clients',async()=>{
+ const health=await fetch(base.replace('/api/v1','')+'/health');assert.equal(health.status,200);assert.equal((await health.json()).success,true);
+ const preflight=await fetch(base+'/auth/login',{method:'OPTIONS',headers:{Origin:'http://localhost:5173','Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'content-type,authorization,x-requested-with'}});
+ assert.equal(preflight.status,204);assert.equal(preflight.headers.get('access-control-allow-origin'),'http://localhost:5173');assert.equal(preflight.headers.get('access-control-allow-credentials'),'true');
+});
+
+
+test('MySQL sessions use UTC for timestamps and reset-token expiry',async()=>{
+ const db=require('../src/config/database');
+ assert.equal((await db.getOne('SELECT @@session.time_zone AS zone')).zone,'+00:00');
+});

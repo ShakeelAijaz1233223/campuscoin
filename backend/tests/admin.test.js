@@ -8,6 +8,7 @@ test.after(require('./helpers').stopServer);
 const adminSetup = async () => registerAndLogin({ role: 'admin' });
 
 test('Admin dashboard returns platform statistics', async () => {
+  await registerAndLogin(); // Own fixture, not an implicit dependency on demo seeds.
   const admin = await adminSetup();
   const res = await api('GET', '/admin/dashboard', { token: admin.token });
   assert.strictEqual(res.status, 200);

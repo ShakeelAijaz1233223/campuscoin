@@ -68,7 +68,7 @@ test('Process generates due transactions without duplicates', async () => {
     body: {
       account_id: account.id, category_id: expenseCat.id, type: 'expense',
       amount: 300, description: 'Past due rule', frequency: 'monthly',
-      start_date: '2026-08-15'
+      start_date: new Date(Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth()-1,1)).toISOString().slice(0,10)
     }
   });
   assert.strictEqual(created.status, 201);
@@ -81,7 +81,7 @@ test('Process generates due transactions without duplicates', async () => {
   assert.strictEqual(p2.data.data.generated, 0, 'second run must not duplicate');
   // Duplicate prevention: exactly one transaction per generated date exists
   const txs = await api('GET', '/transactions?search=Past due rule', { token: user.token });
-  assert.strictEqual(txs.data.data.transactions.length, 2, 'Aug + Sep occurrences generated exactly once each');
+  assert.strictEqual(txs.data.data.transactions.length, 2, 'previous and current month generated exactly once each');
 });
 
 test('PATCH toggle activates/deactivates a rule', async () => {
@@ -107,4 +107,28 @@ test('Recurring rules are ownership-protected', async () => {
   });
   const res = await api('GET', `/recurring-transactions/${created.data.data.recurring_transaction.id}`, { token: b.token });
   assert.strictEqual(res.status, 404);
+});
+
+test('concurrent processors post a due occurrence and balance change exactly once', async () => {
+  const {user,account,expenseCat}=await setup();
+  const today=new Date().toISOString().slice(0,10);
+  const created=await api('POST','/recurring-transactions',{token:user.token,body:{account_id:account.id,category_id:expenseCat.id,type:'expense',amount:25,frequency:'monthly',start_date:today}});
+  assert.strictEqual(created.status,201);
+  const results=await Promise.all([api('POST','/recurring-transactions/process',{token:user.token}),api('POST','/recurring-transactions/process',{token:user.token})]);
+  assert.deepStrictEqual(results.map(r=>r.status),[200,200]);
+  assert.strictEqual(results.reduce((n,r)=>n+r.data.data.generated,0),1);
+  const after=await api('GET',`/accounts/${account.id}`,{token:user.token});
+  assert.strictEqual(Number(after.data.data.account.balance),975);
+});
+
+test('overdue recurring rules catch up only through their end date', async () => {
+  const {user,account,expenseCat}=await setup();
+  const start=new Date(); start.setUTCDate(start.getUTCDate()-3);
+  const end=new Date(); end.setUTCDate(end.getUTCDate()-2);
+  const created=await api('POST','/recurring-transactions',{token:user.token,body:{account_id:account.id,category_id:expenseCat.id,type:'expense',amount:10,frequency:'daily',start_date:start.toISOString().slice(0,10),end_date:end.toISOString().slice(0,10)}});
+  assert.strictEqual(created.status,201);
+  const result=await api('POST','/recurring-transactions/process',{token:user.token});
+  assert.strictEqual(result.data.data.generated,2);
+  const second=await api('POST','/recurring-transactions/process',{token:user.token});
+  assert.strictEqual(second.data.data.generated,0);
 });
