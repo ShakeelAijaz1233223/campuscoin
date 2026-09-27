@@ -21,7 +21,7 @@ const validatePassword = (password) => {
   return errors;
 };
 
-const register = async ({ email, password, first_name, last_name, academic_year }) => {
+const register = async ({ email, password, first_name, last_name, academic_year, monthly_allowance = 0 }) => {
   const passwordErrors = validatePassword(password);
   if (passwordErrors.length > 0) throw new BadRequestError('Password does not meet requirements', passwordErrors);
 
@@ -37,8 +37,8 @@ const register = async ({ email, password, first_name, last_name, academic_year 
     const userId = userResult.insertId;
 
     await conn.execute(
-      'INSERT INTO profiles (user_id, first_name, last_name, academic_year) VALUES (?, ?, ?, ?)',
-      [userId, first_name, last_name || null, academic_year || 'freshman']
+      'INSERT INTO profiles (user_id, first_name, last_name, academic_year, monthly_allowance) VALUES (?, ?, ?, ?, ?)',
+      [userId, first_name, last_name || null, academic_year || 'freshman', monthly_allowance]
     );
 
     // Seed default accounts for a quick start
@@ -104,6 +104,7 @@ const logout = async (userId) => {
 };
 
 const forgotPassword = async (email) => {
+  if(env.NODE_ENV==='production'&&!process.env.SMTP_HOST){throw new (require('../utils/errors').AppError)('Password reset email is not configured. Contact the administrator.',503);}
   const user = await UserModel.findByEmail(email.toLowerCase().trim());
   // Always return success to avoid email enumeration
   if (!user) return { sent: true };
@@ -112,7 +113,8 @@ const forgotPassword = async (email) => {
   const expiresAt = new Date(Date.now() + env.RESET_TOKEN_EXPIRY);
   await PasswordResetModel.create(user.id, hashedToken, expiresAt);
 
-  // In production this token would be emailed. For this deployment it is
+  await require('./mail.service').sendPasswordReset(email, resetToken);
+  // In production this token is emailed. For this deployment it is
   // returned only in non-production so the flow is testable end-to-end.
   return { sent: true, resetToken: env.NODE_ENV === 'production' ? undefined : resetToken };
 };

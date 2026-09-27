@@ -20,7 +20,7 @@ app.use(cors({
   origin: env.CLIENT_URL === '*' ? true : env.CLIENT_URL.split(','),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Body parsing
@@ -32,6 +32,7 @@ app.use((req, res, next) => {
   const clean = (obj) => {
     if (typeof obj !== 'object' || obj === null) return obj;
     for (const key of Object.keys(obj)) {
+      if (['password', 'current_password', 'new_password'].includes(key)) continue;
       if (typeof obj[key] === 'string') {
         obj[key] = obj[key].replace(/[<>]/g, '').trim();
       } else if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
@@ -50,7 +51,7 @@ if (env.NODE_ENV !== 'test') {
 }
 
 // Static exports (reports) — authenticated downloads go through the API route
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), { maxAge: 0 }));
+// Uploaded financial CSVs are private; never expose the upload directory.
 
 // Health check (before rate limiting so probes never get throttled)
 app.get('/health', (req, res) => {

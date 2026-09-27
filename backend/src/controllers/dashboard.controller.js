@@ -4,7 +4,7 @@ const forecastService = require('../services/forecast.service');
 const { sendSuccess } = require('../utils/response');
 
 const getDashboard = asyncHandler(async (req, res) => {
-  const data = await dashboardService.getDashboard(req.user.id);
+  const data = await dashboardService.getDashboard(req.user.id, req.query.month, req.query.year);
   return sendSuccess(res, data, 'Dashboard data retrieved');
 });
 

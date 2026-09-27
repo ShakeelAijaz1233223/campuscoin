@@ -6,7 +6,8 @@ const { getPagination, buildPaginationMeta } = require('../utils/pagination');
 const uploadImport = asyncHandler(async (req, res) => {
   const result = await importService.createImport(req.user.id, req.file, {
     account_id: req.body.account_id ? parseInt(req.body.account_id) : null,
-    type_default: req.body.type_default || 'expense'
+    type_default: req.body.type_default || 'expense',
+    use_ai: req.body.use_ai !== 'false' && req.body.use_ai !== false
   });
   return sendCreated(res, result, 'CSV parsed and preview ready');
 });

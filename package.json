@@ -1,0 +1,15 @@
+{
+  "name": "campuscoin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "npm ci --prefix backend && npm ci --prefix frontend",
+    "dev": "node scripts/dev.mjs",
+    "db:migrate": "npm --prefix backend run migrate",
+    "db:seed": "npm --prefix backend run seed",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "test:e2e": "npm --prefix frontend run test:e2e"
+  },
+  "engines": {"node": ">=20"}
+}

@@ -29,6 +29,7 @@ const exportJSON = asyncHandler(async (req, res) => {
 });
 
 const downloadReport = asyncHandler(async (req, res) => {
+  if (!req.params.filename.startsWith(`report_${req.user.id}_`)) throw new (require('../utils/errors').NotFoundError)('Export not found');
   const filePath = exportService.getFileStream(req.params.filename);
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`);

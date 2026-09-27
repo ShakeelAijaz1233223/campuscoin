@@ -4,7 +4,7 @@ export function Button({children,variant='primary',loading=false,className='',..
 export function IconButton({label,children,...props}){return <button className="icon-button" aria-label={label} title={label} {...props}>{children}</button>;}
 export function Input({label,error,className='',...props}){const id=useId();return <label className={'field '+className} htmlFor={id}><span>{label}</span><input id={id} aria-invalid={!!error} aria-describedby={error?id+'-err':undefined} {...props}/>{error&&<small className="error-text" id={id+'-err'}>{error}</small>}</label>;}
 export function Select({label,children,...props}){const id=useId();return <label className="field" htmlFor={id}><span>{label}</span><select id={id} aria-label={label} {...props}>{children}</select></label>;}
-export function Textarea({label,...props}){const id=useId();return <label className="field" htmlFor={id}><span>{label}</span><textarea id={id} rows={4} {...props}/></label>;}
+export function Textarea({label,...props}){const id=useId();return <label className="field" htmlFor={id}><span>{label}</span><textarea id={id} aria-label={label} rows={4} {...props}/></label>;}
 export function Checkbox({label,...props}){return <label className="check"><input type="checkbox" {...props}/><span>{label}</span></label>;}
 export function Toggle(props){return <Checkbox {...props} role="switch"/>;}
 export function Card({children,className='',...props}){return <section className={'card '+className} {...props}>{children}</section>;}

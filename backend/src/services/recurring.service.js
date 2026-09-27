@@ -40,7 +40,9 @@ const createRecurring = async (userId, data, ip = null) => {
 };
 
 const updateRecurring = async (userId, id, data, ip = null) => {
-  await getRecurringById(userId, id);
+  const record = await getRecurringById(userId, id);
+  if(data.account_id){const a=await AccountModel.findById(data.account_id);if(!a||a.user_id!==userId)throw new BadRequestError('Invalid account');}
+  if(data.end_date && data.end_date < record.start_date)throw new BadRequestError('End date must be after start date');
 
   if (data.category_id) {
     const category = await CategoryModel.findById(data.category_id);

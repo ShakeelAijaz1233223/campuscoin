@@ -1,3 +1,4 @@
-import {request,resourceApi,queryString} from './apiClient';
-export const exportApi={...resourceApi('/exports'),download:(params)=>request('/exports'+queryString(params),{blob:true}),share:(body)=>request('/exports/share',{method:'POST',body}),};
+import {request,queryString} from './apiClient';
+import {reportParams} from './reportApi';
+export const exportApi={download:({format='pdf',...params})=>request('/reports/range/export'+queryString({...reportParams(params),format}),{blob:true})};
 export default exportApi;

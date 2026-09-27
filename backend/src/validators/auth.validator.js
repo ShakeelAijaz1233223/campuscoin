@@ -7,6 +7,7 @@ const registerValidator = [
     .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter')
     .matches(/[a-z]/).withMessage('Password must contain a lowercase letter')
     .matches(/[0-9]/).withMessage('Password must contain a number'),
+  body('monthly_allowance').optional().isFloat({ min: 0 }),
   body('first_name').trim().notEmpty().withMessage('First name is required').isLength({ max: 100 }),
   body('last_name').optional({ values: 'falsy' }).trim().isLength({ max: 100 }),
   body('academic_year').optional().isIn(['freshman', 'sophomore', 'junior', 'senior', 'graduate', 'other'])

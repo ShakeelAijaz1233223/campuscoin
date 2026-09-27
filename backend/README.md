@@ -1,3 +1,5 @@
+> Frontend integration is implemented. See [the root guide](../README.md) for unified startup, cookie authentication, SMTP setup and current integration tests. Browser requests use `/api/v1` through the frontend proxy to port 5000.
+
 # CampusCoin Backend
 
 Production-ready REST API for **CampusCoin** — a student finance management platform.

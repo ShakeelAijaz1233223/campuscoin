@@ -21,8 +21,8 @@ const RecurringModel = {
 
   async create(data) {
     const result = await db.insert(
-      'INSERT INTO recurring_transactions (user_id, account_id, category_id, type, amount, description, frequency, start_date, end_date, next_occurrence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [data.user_id, data.account_id, data.category_id || null, data.type, data.amount, data.description || '', data.frequency, data.start_date, data.end_date || null, data.next_occurrence]
+      'INSERT INTO recurring_transactions (user_id, account_id, category_id, type, amount, description, frequency, start_date, end_date, next_occurrence, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [data.user_id, data.account_id, data.category_id || null, data.type, data.amount, data.description || '', data.frequency, data.start_date, data.end_date || null, data.next_occurrence, data.is_active === false ? 0 : 1]
     );
     return { id: result.insertId };
   },

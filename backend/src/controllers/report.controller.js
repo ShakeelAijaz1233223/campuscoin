@@ -33,4 +33,11 @@ const exportMonthlyPDF = asyncHandler(async (req, res) => {
   }, 'PDF report generated');
 });
 
-module.exports = { getMonthlyReport, getRangeReport, exportMonthlyPDF };
+const exportRange = asyncHandler(async(req,res)=>{
+  const result=await reportService.exportRange(req.user.id,req.query);
+  res.type(result.type);res.setHeader('Content-Disposition',`attachment; filename="campuscoin-report.${result.extension}"`);
+  if(result.filePath)return res.sendFile(result.filePath);
+  return res.send(result.body);
+});
+
+module.exports = { exportRange, getMonthlyReport, getRangeReport, exportMonthlyPDF };

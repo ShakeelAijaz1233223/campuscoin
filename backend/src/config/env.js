@@ -10,14 +10,15 @@ const env = {
   DB_PASSWORD: process.env.DB_PASSWORD || '',
   JWT_SECRET: process.env.JWT_SECRET || 'default_dev_secret',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
   MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE) || 5242880,
   AI_PROVIDER: process.env.AI_PROVIDER || 'none',
   AI_API_KEY: process.env.AI_API_KEY || '',
   RESET_TOKEN_EXPIRY: parseInt(process.env.RESET_TOKEN_EXPIRY) || 3600000,
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
-  RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX) || 100
+  RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX) || 1000
 };
 
+if (env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || env.JWT_SECRET.length < 32)) throw new Error('Set JWT_SECRET to a random secret of at least 32 characters in production');
 module.exports = env;

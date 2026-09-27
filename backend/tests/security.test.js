@@ -18,14 +18,14 @@ test('Malformed token is rejected', async () => {
 });
 
 test('Expired token is rejected', async () => {
-  const expired = jwt.sign({ id: 1 }, process.env.JWT_SECRET || 'campuscoin_dev_jwt_secret_key_2024_very_secure', { expiresIn: '-10s' });
+  const expired = jwt.sign({ id: 1 }, require('../src/config/env').JWT_SECRET, { expiresIn: '-10s' });
   const res = await api('GET', '/dashboard', { token: expired });
   assert.strictEqual(res.status, 401);
   assert.match(res.data.message, /expired/i);
 });
 
 test('Token for non-existent user is rejected', async () => {
-  const token = jwt.sign({ id: 999999 }, process.env.JWT_SECRET || 'campuscoin_dev_jwt_secret_key_2024_very_secure', { expiresIn: '1h' });
+  const token = jwt.sign({ id: 999999 }, require('../src/config/env').JWT_SECRET, { expiresIn: '1h' });
   const res = await api('GET', '/dashboard', { token });
   assert.strictEqual(res.status, 401);
   assert.match(res.data.message, /not found/i);

@@ -7,6 +7,7 @@ const { monthlyReportValidator, rangeReportValidator } = require('../validators/
 
 router.use(authenticate);
 router.get('/monthly', monthlyReportValidator, validate, reportController.getMonthlyReport);
+router.get('/range/export', rangeReportValidator, validate, reportController.exportRange);
 router.get('/range', rangeReportValidator, validate, reportController.getRangeReport);
 router.get('/monthly/pdf', monthlyReportValidator, validate, reportController.exportMonthlyPDF);
 

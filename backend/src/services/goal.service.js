@@ -116,8 +116,9 @@ const getContributions = async (userId, goalId) => {
 const deleteContribution = async (userId, goalId, contributionId, ip = null) => {
   const goal = await GoalModel.findById(goalId);
   if (!goal || goal.user_id !== userId) throw new NotFoundError('Goal not found');
-  const contrib = await GoalModel.removeContribution(contributionId);
-  if (!contrib || contrib.goal_id !== goalId) throw new NotFoundError('Contribution not found');
+  const contributions=await GoalModel.getContributions(goalId,userId);
+  if(!contributions.some(c=>c.id===contributionId))throw new NotFoundError('Contribution not found');
+  await GoalModel.removeContribution(contributionId);
   await ActivityModel.create(userId, 'deleted', 'goal_contribution', contributionId, `Removed contribution from goal: ${goal.name}`, null, ip);
   return true;
 };

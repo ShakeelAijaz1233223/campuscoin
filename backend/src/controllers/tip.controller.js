@@ -15,7 +15,9 @@ const getPersonalizedTips = asyncHandler(async (req, res) => {
 
 const getSystemTips = asyncHandler(async (req, res) => {
   const pagination = getPagination(req.query);
-  const { tips, total } = await tipService.getSystemTips({ category: req.query.category || '', ...pagination });
+  const { tips, total } = await tipService.getSystemTips({ category: req.query.category || '', ...pagination, userId: req.user.id });
+  const saved = await require('../models/bookmark.model').getTipBookmarks(req.user.id, {limit:10000});
+  for(const tip of tips)tip.is_bookmarked=saved.bookmarks.some(b=>b.tip_id===tip.id);
   const meta = buildPaginationMeta(total, pagination.page, pagination.limit);
   return sendPaginated(res, { tips }, meta, 'Saving tips retrieved');
 });

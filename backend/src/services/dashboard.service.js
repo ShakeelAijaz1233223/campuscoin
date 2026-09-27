@@ -11,10 +11,11 @@ const NotificationModel = require('../models/notification.model');
 const { getCurrentMonth, getMonthRange } = require('../utils/dates');
 const { round2, savingsRate } = require('../helpers/statistics');
 
-const getDashboard = async (userId) => {
+const getDashboard = async (userId, selectedMonth, selectedYear) => {
   const user = await UserModel.findById(userId);
   const profile = await ProfileModel.findByUserId(userId);
-  const { month, year } = getCurrentMonth();
+  const current = getCurrentMonth();
+  const month = Number(selectedMonth) || current.month, year = Number(selectedYear) || current.year;
   const { startDate, endDate } = getMonthRange(year, month);
 
   // Core financials — all from MySQL
@@ -97,7 +98,10 @@ const getDashboard = async (userId) => {
     budget_summary: budgetSummary,
     budget_alerts: budgetAlerts,
     recent_transactions: recentTransactions,
-    spending_trend: buildSpendingTrend(userId, startDate, endDate),
+    budgets,
+    category_spending: categorySpending,
+    monthly_overview: (await require('./report.service').getMonthlyReport(userId, year, month)).monthlyTrend.map(r=>({...r,name:r.label})),
+    spending_trend: await buildSpendingTrend(userId, startDate, endDate),
     saving_tips: savingTips,
     current_insight: currentInsight,
     active_goals: activeGoals,

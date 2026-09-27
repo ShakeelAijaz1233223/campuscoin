@@ -36,7 +36,7 @@ const updateSettings = async (userId, data) => {
 
   const kv = {};
   for (const key of ALLOWED_SETTINGS) {
-    if (data[key] !== undefined && !profileFields[key] !== undefined) {
+    if (data[key] !== undefined) {
       if (!(key in profileFields)) kv[key] = data[key];
     }
   }

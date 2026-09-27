@@ -1,24 +1,26 @@
 # CampusCoin frontend
 
-React 19 + Vite single-page application for the CampusCoin student finance workspace. JavaScript/JSX only; no TypeScript.
+React 19 + Vite application connected to the Express/MySQL backend in `../backend`.
+See the [root setup guide](../README.md) and [implemented API contract](docs/API_CONTRACT.md).
 
-## Run
-```bash
-npm install
-cp .env.example .env      # adjust API_PROXY_TARGET to your Express backend
-npm run dev               # http://localhost:5173
-npm run build && npm run preview
-npm test                  # unit tests (node:test)
-npm run test:e2e          # Playwright end-to-end tests against an intercepted API contract
+```sh
+npm ci
+cp .env.example .env
+npm run dev                  # :5173; proxies /api to :5000
+npm test                     # adapter/validation unit tests
+npm run build
+npm run preview              # same API proxy, backend must remain running
+npm run test:e2e              # UI fixture tests
+E2E_CONNECTED=1 npm run test:e2e # adds real database/browser integration tests
 ```
 
-## Backend connection
-All requests go through `src/api/apiClient.js` to `VITE_API_BASE_URL` (default `/api/v1`, proxied by Vite to `API_PROXY_TARGET`). Session cookies are sent with `credentials: 'include'`; an `XSRF-TOKEN` cookie is echoed as `X-XSRF-TOKEN`. Responses may be raw JSON or wrapped as `{ data: ... }`. Collections return `{ items, total }` or arrays. `401` triggers a session-expired state. Failures are displayed as retryable error states; no financial data is fabricated or cached locally.
+`API_PROXY_TARGET` is loaded from `.env` by Vite. Browser-facing
+`VITE_API_BASE_URL` should normally remain `/api/v1`. Never put DB, JWT or SMTP
+secrets in VITE_ variables.
 
-The expected endpoints and payload shapes are described in `docs/API_CONTRACT.md`. Nothing works end to end until a compatible Express/MySQL backend is running.
+Structure: `api` transport/adapters → `hooks/useResource` → shared and domain
+components → pages/routes. Cookies restore sessions; frontend storage contains
+appearance preferences only, not auth tokens or fabricated finance records.
 
-## Structure
-`src/api` (one module per resource) → `src/hooks` (`useResource` + domain hooks) → `src/components` → `src/pages` → `src/routes`. Shared CRUD screens use `components/common/EntityWorkspace.jsx` configured in `entityConfig.js`.
-
-## Accessibility & preferences
-Light/dark theme and three reading sizes (Settings → saved locally), `prefers-reduced-motion` respected, keyboard-accessible dialogs (`<dialog>`), skip link, focus management on route changes, chart data tables.
+Light/dark theme, reading sizes, reduced motion, keyboard dialogs, skip link and
+accessible chart data tables are provided. Keep both API and frontend running.
