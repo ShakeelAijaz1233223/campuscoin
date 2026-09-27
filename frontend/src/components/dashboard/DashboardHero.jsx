@@ -1,1 +1,0 @@
-import PageContainer from '../layout/PageContainer';export default function DashboardHero({name,actions,children}){return <PageContainer eyebrow="A LITTLE CLARITY. A LOT OF POSSIBILITY." title={`Your money, ${name?.split(' ')[0]||'your way'}.`} description="Let’s make room for what matters." actions={actions}>{children}</PageContainer>;}

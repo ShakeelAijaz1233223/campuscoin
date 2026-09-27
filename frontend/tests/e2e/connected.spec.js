@@ -158,7 +158,7 @@ test('sign out clears stale UI state when the browser session is already gone',a
  await session(page);
  // Let dashboard requests finish before simulating expiry; otherwise a pending
  // protected request correctly redirects before the sign-out button can be used.
- await expect(page.getByText('YOUR TOTAL BALANCE',{exact:true})).toBeVisible();
+ await expect(page.getByText('Total balance').first()).toBeVisible();
  await page.waitForLoadState('networkidle');
  await page.context().clearCookies();
  await page.getByRole('button',{name:'Sign out',exact:true}).click();

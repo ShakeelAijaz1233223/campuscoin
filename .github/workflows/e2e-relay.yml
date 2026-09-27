@@ -1,0 +1,134 @@
+# Runs the real Playwright suite (connected mode) plus fresh screenshot
+# capture against a real MySQL service, then commits the screenshots and the
+# e2e log back to this branch via the git data API. This exists because the
+# sandbox cannot download browser binaries; GitHub-hosted runners can.
+name: E2E verification relay
+on:
+  push:
+    branches:
+      - arena/01a0e423-campuscoin
+    paths:
+      - '.github/workflows/e2e-relay.yml'
+permissions:
+  contents: write
+concurrency:
+  group: e2e-relay
+  cancel-in-progress: false
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: campuscoin_local_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -pcampuscoin_local_only --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: campuscoin_local_only
+      DB_NAME: campuscoin_test
+      E2E_ADMIN_EMAIL: admin@e2e.test
+      E2E_ADMIN_PASSWORD: E2EAdmin@123
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: |
+          npm ci --prefix backend --no-audit --no-fund
+          npm ci --prefix frontend --no-audit --no-fund
+      - name: Migrate test database and create the test administrator
+        run: |
+          npm run db:migrate
+          ADMIN_EMAIL="$E2E_ADMIN_EMAIL" ADMIN_PASSWORD="$E2E_ADMIN_PASSWORD" node backend/scripts/create-admin.js
+      - name: Start API and frontend
+        run: |
+          NODE_ENV=test node backend/src/server.js > api.log 2>&1 &
+          npm --prefix frontend run dev > vite.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:5000/api/v1/auth/me -o /dev/null && \
+            curl -sf http://127.0.0.1:5173 -o /dev/null && break
+            sleep 1
+          done
+          curl -s http://127.0.0.1:5000/api/v1/auth/me | head -c 120; echo
+          curl -s -o /dev/null -w 'vite=%{http_code}\n' http://127.0.0.1:5173
+      - name: Install Playwright Chromium
+        run: npx --prefix frontend playwright install chromium --with-deps
+      - name: Run connected e2e suite
+        run: |
+          set -o pipefail
+          E2E_CONNECTED=1 npm run test:e2e 2>&1 | tee e2e-log.txt
+      - name: Capture fresh screenshots
+        working-directory: frontend
+        run: |
+          set -o pipefail
+          node tests/e2e/screenshots.mjs 2>&1 | tee ../shots.log
+        env:
+          E2E_BASE_URL: http://127.0.0.1:5173
+      - name: Commit screenshots and e2e log via git data API
+        if: always()
+        shell: python
+        run: |
+          import base64, json, os, datetime, glob
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError
+
+          token = os.environ['GH_TOKEN']
+          repo = os.environ['GITHUB_REPOSITORY']
+          ref = os.environ['GITHUB_REF_NAME']
+          api = 'https://api.github.com/repos/' + repo
+
+          def call(method, path, payload=None):
+              data = None
+              headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json'}
+              if payload is not None:
+                  data = json.dumps(payload).encode()
+                  headers['Content-Type'] = 'application/json'
+              req = Request(api + path, data=data, headers=headers, method=method)
+              try:
+                  with urlopen(req) as resp:
+                      body = resp.read()
+                  return json.loads(body) if body else {}
+              except HTTPError as e:
+                  print('::error::' + path + ' -> HTTP ' + str(e.code) + ' ' + e.read().decode()[:400])
+                  raise
+
+          files = sorted(glob.glob('frontend/screenshots-out/*.png')) + ['e2e-log.txt', 'shots.log', 'api.log']
+          tree_entries = []
+          for fp in files:
+              if not os.path.exists(fp):
+                  print('::notice::missing ' + fp)
+                  continue
+              content = open(fp, 'rb').read()
+              if len(content) > 48000000:
+                  print('::notice::skipping oversized ' + fp)
+                  continue
+              dest = 'docs/verification/' + os.path.basename(fp)
+              blob = call('POST', '/git/blobs', {'content': base64.b64encode(content).decode(), 'encoding': 'base64'})
+              tree_entries.append({'path': dest, 'mode': '100644', 'type': 'blob', 'sha': blob['sha']})
+              print('::notice::staged ' + dest + ' (' + str(len(content)) + ' bytes)')
+          if not tree_entries:
+              print('::error::nothing to commit')
+              raise SystemExit(1)
+          base_sha = call('GET', '/git/ref/heads/' + ref)['object']['sha']
+          base_tree = call('GET', '/git/commits/' + base_sha)['tree']['sha']
+          tree = call('POST', '/git/trees', {'base_tree': base_tree, 'tree': tree_entries})
+          now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          commit = call('POST', '/git/commits', {
+              'message': 'chore(verification): e2e run artifacts and fresh screenshots [skip ci]',
+              'tree': tree['sha'], 'parents': [base_sha],
+              'author': {'name': 'arena-e2e-relay', 'email': '41898282+github-actions[bot]@users.noreply.github.com', 'date': now}
+          })
+          call('PATCH', '/git/refs/heads/' + ref, {'sha': commit['sha'], 'force': False})
+          print('::notice::committed ' + str(len(tree_entries)) + ' verification artifacts')

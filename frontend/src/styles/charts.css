@@ -1,1 +1,13 @@
-.financial-chart{width:100%;min-width:0;margin-top:20px}.recharts-default-tooltip{background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:9px;box-shadow:var(--shadow);font-size:.75rem}.recharts-tooltip-label{color:var(--text)!important}.recharts-legend-item-text{color:var(--muted)!important;font-size:.7rem}.chart-data{margin-top:12px;font-size:.62rem;color:var(--muted)}.chart-data summary{cursor:pointer;width:fit-content;padding:5px 0}.chart-data table{margin-top:10px}.chart-data td{font-size:.68rem}
+.financial-chart{width:100%;min-width:0;margin-top:18px}
+.recharts-default-tooltip{background:var(--surface)!important;border:1px solid var(--border-strong)!important;border-radius:12px!important;box-shadow:var(--shadow)!important;font-size:.72rem!important;padding:10px 14px!important}
+.recharts-tooltip-label{color:var(--muted)!important;font-weight:600!important;margin-bottom:4px!important}
+.recharts-tooltip-item{color:var(--heading)!important;padding:2px 0!important}
+.recharts-legend-item-text{color:var(--muted)!important;font-size:.68rem!important;font-weight:550!important}
+.recharts-cartesian-axis-tick text{fill:var(--dim)!important;font-size:11px}
+.recharts-pie-label-text{fill:var(--muted)!important}
+.chart-data{margin-top:12px;font-size:.62rem;color:var(--muted)}
+.chart-data summary{cursor:pointer;width:fit-content;padding:5px 0;font-weight:600}
+.chart-data summary:hover{color:var(--accent-strong)}
+[data-theme=dark] .chart-data summary:hover{color:var(--accent)}
+.chart-data table{margin-top:10px}
+.chart-data td{font-size:.68rem}

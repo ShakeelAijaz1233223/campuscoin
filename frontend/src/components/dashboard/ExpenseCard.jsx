@@ -1,1 +1,0 @@
-import {ArrowUpRight} from 'lucide-react';import StatCard from '../common/StatCard';import formatCurrency from '../../utils/formatCurrency';export default function ExpenseCard({value,currency}){return <StatCard label="Total expenses" value={formatCurrency(value,currency)} caption="Money going out this month" icon={ArrowUpRight}/>;}

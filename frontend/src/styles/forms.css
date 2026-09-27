@@ -1,1 +1,35 @@
-.field{display:flex;flex-direction:column;gap:9px;min-width:0;margin:16px 0}.field>span{font-size:.73rem;color:var(--muted);font-weight:450}.field input,.field select,.field textarea,input,select,textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 13px;min-height:44px;transition:border-color .2s,box-shadow .2s;width:100%;font-size:.8rem}input::placeholder,textarea::placeholder{color:var(--dim)}input:focus,select:focus,textarea:focus{outline:none;border-color:#b3f38c70;box-shadow:0 0 0 3px #b3f38c09}input[type=color]{padding:4px;min-height:44px}input[type=checkbox]{width:16px;height:16px;min-height:16px;accent-color:var(--accent);flex-shrink:0}textarea{resize:vertical;line-height:1.7}.check{display:flex;align-items:flex-start;gap:10px;font-size:.73rem;color:var(--muted);line-height:1.7;margin:17px 0;cursor:pointer}.check>input{margin-top:3px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.form-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;border-top:1px solid var(--border);padding-top:20px;margin-top:25px}.inline-alert{padding:14px 17px;background:#c9787810;border:1px solid #c9787835;border-radius:8px;color:var(--danger);font-size:.8rem;line-height:1.8;margin:16px 0}.inline-alert button{background:transparent;border:0;color:inherit;text-decoration:underline;padding:5px}.inline-alert.warning{color:var(--warning);border-color:#d9ae6544;background:#d9ae6508}.error-text{color:var(--danger);font-size:.75rem;line-height:1.7}.ai-suggestion{padding:16px;border-radius:10px;border:1px solid #aa97db2b;background:#aa97db08;margin-top:17px}.ai-suggestion>.row>span{font-size:.73rem;color:var(--purple)}.ai-suggestion .button{font-size:.68rem}.suggestion-result{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:17px}.suggestion-result small{display:block;flex-basis:100%;color:var(--muted);font-size:.68rem}.upload-zone{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;border:1px dashed #b3f38c4a;background:#b3f38c05;border-radius:13px;padding:25px;text-align:center}.upload-zone>svg{color:var(--accent)}.upload-zone>strong{font-size:1rem;font-weight:500}.upload-zone>span{font-size:.72rem;color:var(--muted)}.upload-zone input{font-size:.72rem;background:var(--surface);width:auto;max-width:100%}.csv-preview{max-height:350px;margin:20px 0}.csv-preview input{padding:8px;min-width:115px;font-size:.7rem}.csv-preview td:first-child{min-width:40px}.csv-preview td small{font-size:.6rem;display:block;max-width:200px;margin-top:7px}.csv-preview button{background:var(--surface-hover);border:1px solid var(--border);color:var(--accent);border-radius:4px}.csv-import>h3{margin-top:25px}.filter-panel{padding:18px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 14px}.collection>.filter-panel{padding:15px 22px;border-bottom:1px solid var(--border)}.filter-panel .field{margin:8px 0}.filter-panel .field input,.filter-panel .field select{font-size:.72rem}.filter-panel .field>span{font-size:.65rem}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0;margin:15px 0}
+.field>span{font-size:.7rem;color:var(--muted);font-weight:650}
+.field input,.field select,.field textarea,input,select,textarea{background:var(--surface);border:1px solid var(--border-strong);color:var(--text);border-radius:11px;padding:11px 14px;min-height:44px;transition:border-color .2s,box-shadow .2s,background .2s;width:100%;font-size:.8rem}
+[data-theme=dark] .field input,[data-theme=dark] .field select,[data-theme=dark] .field textarea,[data-theme=dark] input,[data-theme=dark] select,[data-theme=dark] textarea{background:var(--surface-2);border-color:var(--border)}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=color]{padding:4px;min-height:44px}
+input[type=checkbox]{width:16px;height:16px;min-height:16px;accent-color:var(--accent);flex-shrink:0}
+textarea{resize:vertical;line-height:1.7}
+.check{display:flex;align-items:flex-start;gap:10px;font-size:.73rem;color:var(--muted);line-height:1.7;margin:16px 0;cursor:pointer}
+.check>input{margin-top:3px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.form-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;border-top:1px solid var(--border);padding-top:20px;margin-top:24px}
+.inline-alert{padding:13px 16px;background:var(--danger-soft);border:1px solid rgba(221,75,96,.3);border-radius:12px;color:var(--danger);font-size:.78rem;line-height:1.75;margin:15px 0}
+.inline-alert button{background:transparent;border:0;color:inherit;text-decoration:underline;padding:5px}
+.inline-alert.warning{color:var(--warning);border-color:rgba(185,119,14,.35);background:var(--warning-soft)}
+.error-text{color:var(--danger);font-size:.72rem;line-height:1.7}
+.ai-suggestion{padding:15px;border-radius:13px;border:1px solid rgba(138,110,248,.3);background:var(--purple-soft);margin-top:16px}
+.ai-suggestion>.row>span{font-size:.72rem;color:var(--purple);font-weight:650}
+.ai-suggestion .button{font-size:.68rem}
+.suggestion-result{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:16px}
+.suggestion-result small{display:block;flex-basis:100%;color:var(--muted);font-size:.66rem}
+.upload-zone{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:13px;border:1.5px dashed var(--accent-line);background:var(--accent-soft);border-radius:16px;padding:26px;text-align:center;transition:border-color .2s,background .2s}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-soft)}
+.upload-zone>svg{color:var(--accent-strong)}
+[data-theme=dark] .upload-zone>svg{color:var(--accent)}
+.upload-zone>strong{font-size:.98rem;font-weight:650;color:var(--heading)}
+.upload-zone>span{font-size:.72rem;color:var(--muted)}
+.upload-zone input{font-size:.72rem;background:var(--surface);width:auto;max-width:100%}
+.csv-preview{max-height:350px;margin:20px 0}
+.csv-preview input{padding:8px;min-width:115px;font-size:.7rem}
+.csv-preview td:first-child{min-width:40px}
+.csv-preview td small{font-size:.6rem;display:block;max-width:200px;margin-top:7px}
+.csv-preview button{background:var(--surface);border:1px solid var(--border-strong);color:var(--accent-strong);border-radius:8px}
+.csv-import>h3{margin-top:24px}

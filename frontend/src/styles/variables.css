@@ -1,2 +1,94 @@
-:root{color-scheme:dark;--bg:#080d11;--surface:#10171d;--surface-hover:#182129;--glass:rgba(18,26,32,.78);--text:#f2f4ef;--muted:#98a5aa;--dim:#758289;--border:rgba(189,211,210,.12);--accent:#b3f38c;--accent-ink:#15230f;--cyan:#83d9dc;--purple:#bba4eb;--danger:#ffa09e;--warning:#f4c581;--chart-grid:#243036;--shadow:0 20px 80px #0002;--radius:18px;--font:Inter,'Segoe UI',Arial,sans-serif}
-[data-theme=light]{color-scheme:light;--bg:#f1f4ed;--surface:#fff;--surface-hover:#e7ede2;--glass:rgba(255,255,255,.82);--text:#1b2921;--muted:#53635b;--dim:#66766f;--border:rgba(22,48,34,.15);--accent:#94d967;--accent-ink:#13240c;--cyan:#286b74;--purple:#7450b1;--danger:#ab343e;--warning:#8d5a12;--chart-grid:#dce5d8;--shadow:0 20px 60px #233b1810}
+/* CampusCoin — light premium fintech design tokens.
+   Bright canvas with a subtle blue tint, navy ink, emerald primary,
+   cyan accents and violet for AI surfaces. */
+:root{
+  color-scheme:light;
+  --bg:#f2f6fb;
+  --bg-canvas-a:#e7f1fa;
+  --bg-canvas-b:#e4f6ef;
+  --surface:#ffffff;
+  --surface-2:#f6f9fc;
+  --surface-hover:#eef4fa;
+  --glass:rgba(255,255,255,.9);
+  --text:#1c2f42;
+  --heading:#0e2233;
+  --muted:#5a7086;
+  --dim:#8498ab;
+  --border:#e3eaf2;
+  --border-strong:#cdd9e6;
+  --accent:#0eaf7e;
+  --accent-strong:#0c9a6e;
+  --accent-ink:#ffffff;
+  --accent-soft:#e0f5ec;
+  --accent-line:#b9e7d5;
+  --accent-glow:rgba(14,175,126,.22);
+  --cyan:#0a9fbd;
+  --cyan-soft:#dcf1f9;
+  --purple:#7a5af8;
+  --purple-soft:#eee9fe;
+  --danger:#dd4b60;
+  --danger-soft:#fcebef;
+  --warning:#b9770e;
+  --warning-soft:#fbf1de;
+  --chart-grid:#e9eff6;
+  --chart-1:#12b981;
+  --chart-2:#22c3dd;
+  --chart-3:#8b72f6;
+  --chart-4:#f2a444;
+  --chart-5:#ef7d9d;
+  --chart-6:#4fb3f6;
+  --shadow:0 24px 60px -30px rgba(23,84,125,.28);
+  --shadow-sm:0 10px 26px -16px rgba(23,84,125,.22);
+  --shadow-hover:0 30px 70px -30px rgba(23,84,125,.32);
+  --radius:20px;
+  --radius-sm:13px;
+  --radius-xs:9px;
+  --sidebar-width:272px;
+  --font:Inter,'Inter var',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --hero-grad:linear-gradient(118deg,#eafaf2 0%,#e9f3fb 52%,#eef7fd 100%);
+  --insight-grad:linear-gradient(150deg,#f2edfe 0%,#fbf9ff 55%,#f6f4ff 100%);
+  --guidance-grad:linear-gradient(130deg,#0f9d76 0%,#0aa2bd 100%);
+}
+[data-theme=dark]{
+  color-scheme:dark;
+  --bg:#0b1622;
+  --bg-canvas-a:#0f2033;
+  --bg-canvas-b:#0d2420;
+  --surface:#122030;
+  --surface-2:#16283b;
+  --surface-hover:#1b2e43;
+  --glass:rgba(18,32,48,.92);
+  --text:#e6edf5;
+  --heading:#f3f8fd;
+  --muted:#9db1c5;
+  --dim:#6e8299;
+  --border:rgba(148,183,213,.15);
+  --border-strong:rgba(148,183,213,.3);
+  --accent:#2ed3a0;
+  --accent-strong:#48e0b2;
+  --accent-ink:#04231a;
+  --accent-soft:rgba(46,211,160,.13);
+  --accent-line:rgba(46,211,160,.35);
+  --accent-glow:rgba(46,211,160,.25);
+  --cyan:#43c8e3;
+  --cyan-soft:rgba(67,200,227,.14);
+  --purple:#a78bfa;
+  --purple-soft:rgba(167,139,250,.15);
+  --danger:#f8717f;
+  --danger-soft:rgba(248,113,127,.14);
+  --warning:#fbbf24;
+  --warning-soft:rgba(251,191,36,.13);
+  --chart-grid:rgba(148,183,213,.13);
+  --chart-1:#2ed3a0;
+  --chart-2:#43c8e3;
+  --chart-3:#a78bfa;
+  --chart-4:#f2a444;
+  --chart-5:#ef7d9d;
+  --chart-6:#4fb3f6;
+  --shadow:0 28px 70px -30px rgba(2,10,20,.8);
+  --shadow-sm:0 12px 30px -18px rgba(2,10,20,.7);
+  --shadow-hover:0 32px 80px -30px rgba(2,10,20,.85);
+  --hero-grad:linear-gradient(118deg,rgba(46,211,160,.1) 0%,rgba(67,200,227,.08) 55%,rgba(18,32,48,0) 100%),var(--surface);
+  --insight-grad:linear-gradient(150deg,rgba(167,139,250,.14) 0%,rgba(18,32,48,0) 70%),var(--surface);
+  --guidance-grad:linear-gradient(130deg,#0c8a67 0%,#0d7f96 100%);
+}
