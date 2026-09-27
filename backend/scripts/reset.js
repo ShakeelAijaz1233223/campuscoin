@@ -9,6 +9,9 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const run = async () => {
   const dbName = process.env.DB_NAME || 'campuscoin';
+  if (process.env.NODE_ENV === 'production' || !/^[A-Za-z0-9_]+$/.test(dbName) || !process.argv.includes('--confirm=' + dbName)) {
+    throw new Error('Destructive reset blocked. Back up first; use --confirm=' + dbName + ' only for a disposable development database.');
+  }
 
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',

@@ -22,7 +22,7 @@ const getMonthlyReport = async (userId, year, month) => {
     TransactionModel.getTotalByType(userId, startDate, endDate, 'income'),
     TransactionModel.getTotalByType(userId, startDate, endDate, 'expense'),
     TransactionModel.getCategorySpending(userId, startDate, endDate),
-    TransactionModel.getMonthlyTotals(userId, 6),
+    TransactionModel.getMonthlyTotals(userId, 6, endDate),
     TransactionModel.findByUser(userId, { page: 1, limit: 50, startDate, endDate })
   ]);
 
@@ -53,47 +53,45 @@ const getMonthlyReportWithBudgets = async (userId, year, month) => {
 };
 
 const getRangeReport = async (userId, startDate, endDate, groupBy = 'daily', categoryId = '', incomeCategoryId = '') => {
-  const filters = { page: 1, limit: 10000, startDate, endDate };
-  if (categoryId) filters.category_id = parseInt(categoryId);
-  const { transactions, total } = await TransactionModel.findByUser(userId, filters);
-
-  const income = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + parseFloat(t.amount), 0);
-  const expense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + parseFloat(t.amount), 0);
-
-  let breakdown = [];
-  let breakdownLabel = 'Breakdown';
-  if (groupBy === 'daily') {
-    const daily = await TransactionModel.getDailySpending(userId, startDate, endDate);
-    const byDate = {};
-    for (const row of daily) {
-      if (!byDate[row.date]) byDate[row.date] = { label: row.date, income: 0, expense: 0 };
-      byDate[row.date][row.type] += parseFloat(row.total);
+  if(startDate>endDate)throw new (require('../utils/errors').BadRequestError)('Start date must be on or before end date');
+  const db=require('../config/database');
+  const clauses=["t.user_id = ?", "t.status = 'active'", 't.date >= ?', 't.date <= ?'];
+  const values=[userId,startDate,endDate];
+  if(categoryId){clauses.push("(t.type != 'expense' OR t.category_id = ?)");values.push(Number(categoryId));}
+  if(incomeCategoryId){clauses.push("(t.type != 'income' OR t.category_id = ?)");values.push(Number(incomeCategoryId));}
+  const transactions=await db.query(`SELECT t.*, c.name AS category_name FROM transactions t LEFT JOIN categories c ON c.id=t.category_id WHERE ${clauses.join(' AND ')} ORDER BY t.date, t.id`,values);
+  const totals={income:0,expense:0,count:transactions.length};
+  const daily={},weekly={},monthly={},categories={};
+  for(const t of transactions){
+    if(!['income','expense'].includes(t.type))continue;
+    const amount=Number(t.amount);totals[t.type]+=amount;
+    const day=t.date.slice(0,10), month=day.slice(0,7);
+    const date=new Date(day+'T00:00:00Z');date.setUTCDate(date.getUTCDate()-((date.getUTCDay()+6)%7));
+    const week=date.toISOString().slice(0,10);
+    for(const [group,key] of [[daily,day],[weekly,week],[monthly,month]]){
+      group[key] ||= {name:key,income:0,expense:0,amount:0};group[key][t.type]+=amount;if(t.type==='expense')group[key].amount+=amount;
     }
-    breakdown = Object.values(byDate).map((d) => ({ ...d, income: round2(d.income), expense: round2(d.expense) }));
-    breakdownLabel = 'Daily Breakdown';
-  } else if (groupBy === 'weekly') {
-    const weekly = await TransactionModel.getWeeklySpending(userId, startDate, endDate);
-    const byWeek = {};
-    for (const row of weekly) {
-      const label = `${row.year}-W${String(row.week).padStart(2, '0')}`;
-      if (!byWeek[label]) byWeek[label] = { label, income: 0, expense: 0 };
-      byWeek[label][row.type] += parseFloat(row.total);
-    }
-    breakdown = Object.values(byWeek).map((w) => ({ ...w, income: round2(w.income), expense: round2(w.expense) }));
-    breakdownLabel = 'Weekly Breakdown';
-  } else {
-    const categories = await TransactionModel.getCategorySpending(userId, startDate, endDate);
-    breakdown = categories.map((c) => ({ label: c.category_name, total: round2(parseFloat(c.total)) }));
-    breakdownLabel = 'Category Breakdown';
+    if(t.type==='expense'){const key=t.category_name||'Uncategorized';categories[key] ||= {name:key,amount:0};categories[key].amount+=amount;}
   }
+  totals.income=round2(totals.income);totals.expense=round2(totals.expense);
+  const rows=group=>Object.values(group).map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[k,typeof v==='number'?round2(v):v])));
+  const dailyRows=rows(daily),weeklyRows=rows(weekly),categoryRows=rows(categories);
+  const breakdown=(groupBy==='category'?categoryRows:groupBy==='weekly'?weeklyRows:dailyRows).map(r=>({...r,label:r.name,total:r.amount}));
+  const user=await getUserContext(userId);
+  return {currency:user.currency,period:{title:`${startDate} to ${endDate}`,label:`${startDate} to ${endDate}`,startDate,endDate},totals,breakdown,breakdownLabel:`${groupBy} breakdown`,transactions,daily:dailyRows,weekly:weeklyRows,monthly:rows(monthly),categories:categoryRows};
+};
 
-  return {
-    period: { title: `${startDate} to ${endDate}`, startDate, endDate },
-    totals: { income: round2(income), expense: round2(expense), count: total },
-    breakdown,
-    breakdownLabel,
-    transactions
-  };
+const exportRange = async (userId, params) => {
+  const report=await getRangeReport(userId,params.start_date,params.end_date,params.group_by,params.category_id,params.income_category_id);
+  if(params.format==='json')return {body:JSON.stringify(report,null,2),type:'application/json',extension:'json'};
+  if(params.format==='csv'){
+    const escape=v=>{let text=String(v??'');if(/^[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};
+    const keys=['date','description','type','amount','category_name','notes'];
+    return {body:[keys.join(','),...report.transactions.map(t=>keys.map(k=>escape(t[k])).join(','))].join('\r\n'),type:'text/csv; charset=utf-8',extension:'csv'};
+  }
+  const user=await getUserContext(userId);
+  const result=await buildRangeReportPDF({user,...report});scheduleCleanup(result.filePath);
+  return {...result,type:'application/pdf',extension:'pdf'};
 };
 
 const generateMonthlyPDF = async (userId, year, month) => {
@@ -106,15 +104,11 @@ const generateMonthlyPDF = async (userId, year, month) => {
 
 const generateRangePDF = async (userId, startDate, endDate, groupBy, breakdown, breakdownLabel, title) => {
   const user = await getUserContext(userId);
-  const { filePath, filename } = await buildRangeReportPDF({
-    user,
-    period: { title: title || `${startDate} to ${endDate}`, startDate, endDate },
-    totals: { income: 0, expense: 0, count: 0 },
-    breakdown,
-    breakdownLabel
-  });
+  const report=await getRangeReport(userId,startDate,endDate,groupBy);
+  if(title)report.period.title=title;
+  const {filePath,filename}=await buildRangeReportPDF({user,...report});
   scheduleCleanup(filePath);
-  return { filePath, filename, download_url: `/api/v1/exports/download/${filename}` };
+  return {filePath,filename,download_url:`/api/v1/exports/download/${filename}`};
 };
 
 const scheduleCleanup = (filePath) => {
@@ -130,4 +124,4 @@ const getExportFile = (filename) => {
   return filePath;
 };
 
-module.exports = { getMonthlyReport, getMonthlyReportWithBudgets, getRangeReport, generateMonthlyPDF, generateRangePDF, getExportFile };
+module.exports = { exportRange, getMonthlyReport, getMonthlyReportWithBudgets, getRangeReport, generateMonthlyPDF, generateRangePDF, getExportFile };

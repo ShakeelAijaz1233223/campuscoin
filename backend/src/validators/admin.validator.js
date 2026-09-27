@@ -45,6 +45,7 @@ const announcementUpdateValidator = [
 const announcementIdValidator = [param('id').isInt({ min: 1 }).withMessage('Invalid announcement id')];
 
 const systemTipValidator = [
+  body('status').optional().isIn(['active','inactive']),
   body('title').trim().notEmpty().withMessage('Title is required').isLength({ max: 300 }),
   body('content').trim().notEmpty().withMessage('Content is required'),
   body('category').optional({ values: 'falsy' }).isLength({ max: 50 }),

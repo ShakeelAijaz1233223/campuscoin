@@ -2,6 +2,7 @@ const { body, param, query } = require('express-validator');
 const { dateIsValid } = require('./transaction.validator');
 
 const createRecurringValidator = [
+  body('is_active').optional().isBoolean(),
   body('account_id').isInt({ min: 1 }).withMessage('Valid account_id is required'),
   body('category_id').optional({ values: 'falsy' }).isInt({ min: 1 }),
   body('type').isIn(['income', 'expense']).withMessage('Type must be income or expense'),

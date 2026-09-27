@@ -122,3 +122,18 @@ test('Admin-authorized endpoint blocks students and allows admins', async () => 
   const allowed = await api('GET', '/admin/dashboard', { token: admin.token });
   assert.strictEqual(allowed.status, 200);
 });
+
+test('concurrent registrations return one created account and one conflict, never 500', async () => {
+  const email=uniqueEmail('parallel-register');
+  const body={email,password:'Abcdef12',first_name:'Parallel'};
+  const responses=await Promise.all([api('POST','/auth/register',{body}),api('POST','/auth/register',{body})]);
+  assert.deepStrictEqual(responses.map(r=>r.status).sort(),[201,409]);
+});
+
+test('a reset token can be consumed only once, including concurrent requests', async () => {
+  const {email}=await registerAndLogin();
+  const fp=await api('POST','/auth/forgot-password',{body:{email}});
+  const body={token:fp.data.data.reset_token,password:'Changed123'};
+  const results=await Promise.all([api('POST','/auth/reset-password',{body}),api('POST','/auth/reset-password',{body})]);
+  assert.deepStrictEqual(results.map(r=>r.status).sort(),[200,400]);
+});

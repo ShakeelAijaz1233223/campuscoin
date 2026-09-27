@@ -11,6 +11,7 @@ const SUPPORTED_COLUMNS = {
   description: ['description', 'details', 'narration', 'memo', 'particulars', 'title', 'name'],
   amount: ['amount', 'value', 'amt', 'transaction amount', 'amount(pkr)', 'amount_pkr'],
   type: ['type', 'transaction type', 'debit/credit', 'dr/cr', 'direction'],
+  category_id: ['category_id', 'categoryid'],
   category: ['category', 'category name', 'cat'],
   notes: ['notes', 'note', 'comment', 'remarks'],
   account: ['account', 'account name', 'source account']
@@ -43,6 +44,7 @@ const parseCSVFile = (filePath, options = {}) => {
       (err, rows) => {
         if (err) return reject(new Error(`CSV parsing failed: ${err.message}`));
         if (!rows || rows.length === 0) return reject(new Error('CSV file contains no data rows'));
+        if(rows.length>maxRows)return reject(new Error(`CSV contains too many rows (maximum ${maxRows})`));
         const trimmed = rows.slice(0, maxRows).map((row, idx) => ({ ...row, _rowNumber: idx + 2 }));
         resolve({ headers: Object.keys(rows[0] || {}), rows: trimmed, totalRows: rows.length });
       }
@@ -105,6 +107,7 @@ const normalizeRow = (row) => {
       amount: Math.abs(amount),
       type: normalizedType,
       category,
+      category_id: row.category_id ? Number(row.category_id) : null,
       notes,
       account
     },
@@ -120,7 +123,7 @@ const parseDate = (value) => {
   if (m) {
     const [, y, mo, d] = m;
     const date = new Date(Date.UTC(+y, +mo - 1, +d));
-    if (isValidDate(date, +y, +mo, +d)) return date.toISOString().split('T')[0];
+    return isValidDate(date, +y, +mo, +d) ? date.toISOString().split('T')[0] : null;
   }
 
   // DD/MM/YYYY (day-first, common in PK region)
@@ -129,7 +132,7 @@ const parseDate = (value) => {
     let [, d, mo, y] = m;
     if (+mo > 12) { [d, mo] = [mo, d]; } // swap if month/day swapped
     const date = new Date(Date.UTC(+y, +mo - 1, +d));
-    if (isValidDate(date, +y, +mo, +d)) return date.toISOString().split('T')[0];
+    return isValidDate(date, +y, +mo, +d) ? date.toISOString().split('T')[0] : null;
   }
 
   // Try native Date parsing as fallback (e.g., "Jan 5, 2026")

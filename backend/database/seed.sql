@@ -1,6 +1,7 @@
 -- ============================================================
--- CampusCoin Seed Data
--- Run AFTER schema_fixed.sql
+-- CampusCoin LEGACY DEMO Seed Data — NOT real financial records
+-- Not used by normal setup. Never apply to an existing/production database.
+-- Use npm run migrate for schema + safe reference defaults instead.
 -- ============================================================
 
 INSERT INTO `system_settings` (`setting_key`, `setting_value`, `description`) VALUES

@@ -1,3 +1,4 @@
 export function isIsoDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return false;const d=new Date(value+'T00:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value;}
 export function validateTransaction(row){const errors=[];if(!String(row.description||'').trim())errors.push('Description is required');if(!Number.isFinite(Number(row.amount))||Number(row.amount)<=0)errors.push('Amount must be greater than zero');if(!['income','expense'].includes(row.type))errors.push('Type must be income or expense');if(!isIsoDate(row.date))errors.push('Date must be a valid YYYY-MM-DD date');return errors;}
-export function validatePassword(value){return typeof value==='string'&&value.length>=12;}
+export const PASSWORD_HINT='Use at least 8 characters, including an uppercase letter, a lowercase letter, and a number.';
+export function validatePassword(value){return typeof value==='string'&&value.length>=8&&/[A-Z]/.test(value)&&/[a-z]/.test(value)&&/[0-9]/.test(value);}

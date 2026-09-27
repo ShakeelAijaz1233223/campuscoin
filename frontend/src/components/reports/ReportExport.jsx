@@ -1,2 +1,17 @@
-import {useState} from 'react';import {Download,Share2} from 'lucide-react';import {Button,Modal} from '../common/UI';import {exportReport} from '../../services/exportService';import exportApi from '../../api/exportApi';import {useApp} from '../../context/AppContext';
-export default function ReportExport({filters,formats=['pdf']}){const [busy,setBusy]=useState(''),[share,setShare]=useState('');const {notify}=useApp();async function run(format){setBusy(format);try{await exportReport(filters,format);notify('Your export is ready.');}catch(e){notify(e.message,'error');}finally{setBusy('');}}async function shareReport(){setBusy('share');try{const d=await exportApi.share({filters,expiresInHours:24});const u=new URL(d.url,window.location.origin);if(!['http:','https:'].includes(u.protocol))throw new Error('Invalid share link returned by the server.');setShare(u.href);}catch(e){notify(e.message,'error');}finally{setBusy('');}}return <><div className="row wrap">{formats.map(format=><Button key={format} variant="secondary" disabled={!!busy} loading={busy===format} onClick={()=>run(format)}><Download size={16}/>{format==='image'?'Image':format.toUpperCase()}</Button>)}<Button variant="secondary" disabled={!!busy} loading={busy==='share'} onClick={shareReport}><Share2 size={15}/>Share</Button></div><Modal open={!!share} title="Share your report" onClose={()=>setShare('')}><p className="muted">Anyone with this link can view the report. The requested link expires in 24 hours. Only share it with people you trust.</p><input aria-label="Report share link" readOnly value={share} onFocus={e=>e.target.select()}/><div className="form-actions"><Button onClick={async()=>{try{await navigator.clipboard.writeText(share);notify('Link copied.');}catch{notify('Select the link and copy it manually.','error');}}}>Copy link</Button></div></Modal></>;}
+import {useState} from 'react';
+import {Download,Share2} from 'lucide-react';
+import {Button} from '../common/UI';
+import {exportReport,saveBlob} from '../../services/exportService';
+import exportApi from '../../api/exportApi';
+import {useApp} from '../../context/AppContext';
+export default function ReportExport({filters,formats=['pdf']}) {
+ const [busy,setBusy]=useState('');const {notify}=useApp();
+ async function run(format){setBusy(format);try{await exportReport(filters,format);notify('Your export is ready.');}catch(e){notify(e.message,'error');}finally{setBusy('');}}
+ async function share(){setBusy('share');try{
+  const blob=await exportApi.download({...filters,format:'pdf'});
+  const file=new File([blob],'campuscoin-report.pdf',{type:'application/pdf'});
+  if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'CampusCoin report'});}
+  else {saveBlob(blob,file.name);notify('PDF downloaded. Attach it to an email or message to share securely.');}
+ }catch(e){if(e.name!=='AbortError')notify(e.message,'error');}finally{setBusy('');}}
+ return <div className="row wrap">{formats.map(format=><Button key={format} variant="secondary" disabled={!!busy} loading={busy===format} onClick={()=>run(format)}><Download size={16}/>{format.toUpperCase()}</Button>)}<Button variant="secondary" disabled={!!busy} loading={busy==='share'} onClick={share}><Share2 size={15}/>Share PDF</Button></div>;
+}

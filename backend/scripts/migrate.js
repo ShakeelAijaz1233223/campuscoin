@@ -8,6 +8,8 @@ const mysql = require('mysql2/promise');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const run = async () => {
+  const database = process.env.DB_NAME || 'campuscoin';
+  if (!/^[A-Za-z0-9_]+$/.test(database)) throw new Error('DB_NAME must contain only letters, numbers and underscores');
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 3306,
@@ -27,19 +29,16 @@ const run = async () => {
 
     console.log('→ Applying indexes.sql...');
     const indexes = fs.readFileSync(path.join(__dirname, '../database/indexes.sql'), 'utf8');
-    try {
-      await connection.query(indexes);
-    } catch (err) {
-      if (err.code === 'ER_DUP_KEYNAME') {
-        console.log('  (some indexes already exist — skipped)');
-      } else {
-        throw err;
-      }
+    // Skip existing indexes individually, not the whole batch after its first duplicate.
+    for (const statement of indexes.replace(/--[^\n]*/g, '').split(';').filter(s => s.trim())) {
+      try { await connection.query(statement); }
+      catch (err) { if (err.code !== 'ER_DUP_KEYNAME') throw err; }
     }
+    await require('../database/defaults')(connection);
 
     console.log('✓ Migration completed successfully.');
     console.log(`  Database: ${process.env.DB_NAME || 'campuscoin'}`);
-    console.log('  Next step: run "npm run seed" to load development data.');
+    console.log('  Essential reference data ready. No demo users or financial records were added.');
   } finally {
     await connection.end();
   }

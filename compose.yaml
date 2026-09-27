@@ -1,0 +1,18 @@
+# Optional local database only. Never reuse this development password in production.
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-campuscoin_local_only}
+      MYSQL_DATABASE: campuscoin
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - campuscoin-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  campuscoin-db:

@@ -211,7 +211,7 @@ const deleteAnnouncement = async (adminId, id, ip = null) => {
 // ---------- System tips management ----------
 
 const getSystemTips = async (filters) => {
-  return TipModel.findAll(filters);
+  return TipModel.findAll({...filters,includeInactive:true});
 };
 
 const createSystemTip = async (adminId, data, ip = null) => {

@@ -7,6 +7,7 @@ const GoalModel = {
 
   async findByUser(userId, { status = '', page = 1, limit = 20 } = {}) {
     let where = ['user_id = ?'];
+    if (!status) where.push("status != 'cancelled'");
     let params = [userId];
     if (status) { where.push('status = ?'); params.push(status); }
     const countResult = await db.getOne(`SELECT COUNT(*) as total FROM goals WHERE ${where.join(' AND ')}`, params);
@@ -17,8 +18,8 @@ const GoalModel = {
 
   async create(data) {
     const result = await db.insert(
-      'INSERT INTO goals (user_id, name, description, target_amount, target_date, icon, color) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [data.user_id, data.name, data.description || null, data.target_amount, data.target_date || null, data.icon || null, data.color || null]
+      'INSERT INTO goals (user_id, name, description, target_amount, target_date, icon, color, current_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [data.user_id, data.name, data.description || null, data.target_amount, data.target_date || null, data.icon || null, data.color || null, data.current_amount || 0]
     );
     return { id: result.insertId };
   },

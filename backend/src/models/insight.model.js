@@ -5,11 +5,12 @@ const InsightModel = {
     return db.getOne('SELECT * FROM insights WHERE id = ?', [id]);
   },
 
-  async findByUser(userId, { page = 1, limit = 12 } = {}) {
-    const countResult = await db.getOne('SELECT COUNT(*) as total FROM insights WHERE user_id = ?', [userId]);
-    const offset = (page - 1) * limit;
-    const insights = await db.query('SELECT * FROM insights WHERE user_id = ? ORDER BY year DESC, month DESC LIMIT ? OFFSET ?', [userId, limit, offset]);
-    return { insights, total: countResult.total };
+  async findByUser(userId, { page = 1, limit = 12, month, year } = {}) {
+    const params=[userId];let where='i.user_id = ?';
+    if(month){where+=' AND i.month = ?';params.push(Number(month));}if(year){where+=' AND i.year = ?';params.push(Number(year));}
+    const countResult=await db.getOne(`SELECT COUNT(*) as total FROM insights i WHERE ${where}`,params);
+    const insights=await db.query(`SELECT i.*, EXISTS(SELECT 1 FROM insight_bookmarks b WHERE b.insight_id=i.id AND b.user_id=i.user_id) AS is_bookmarked FROM insights i WHERE ${where} ORDER BY i.year DESC,i.month DESC LIMIT ? OFFSET ?`,[...params,limit,(page-1)*limit]);
+    return {insights,total:countResult.total};
   },
 
   async findByMonthYear(userId, month, year) {

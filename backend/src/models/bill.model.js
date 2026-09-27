@@ -7,6 +7,7 @@ const BillModel = {
 
   async findByUser(userId, { status = '', is_paid = '', page = 1, limit = 20 } = {}) {
     let where = ['b.user_id = ?'];
+    if(!status)where.push("b.status != 'archived'");
     let params = [userId];
     if (status) { where.push('b.status = ?'); params.push(status); }
     if (is_paid !== '') { where.push('b.is_paid = ?'); params.push(parseInt(is_paid)); }
@@ -21,8 +22,8 @@ const BillModel = {
 
   async create(data) {
     const result = await db.insert(
-      'INSERT INTO bills (user_id, category_id, name, amount, due_date, frequency, reminder_days, auto_pay, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [data.user_id, data.category_id || null, data.name, data.amount, data.due_date, data.frequency || 'monthly', data.reminder_days || 3, data.auto_pay ? 1 : 0, data.notes || null]
+      'INSERT INTO bills (user_id, category_id, name, amount, due_date, frequency, reminder_days, auto_pay, notes, is_paid, paid_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [data.user_id, data.category_id || null, data.name, data.amount, data.due_date, data.frequency || 'monthly', data.reminder_days ?? 3, data.auto_pay ? 1 : 0, data.notes || null, data.is_paid ? 1 : 0, data.is_paid ? new Date().toISOString().slice(0,10) : null]
     );
     return { id: result.insertId };
   },

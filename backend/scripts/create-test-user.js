@@ -3,11 +3,13 @@
  * Creates a test student user with sample data: node scripts/create-test-user.js [email] [password]
  * Defaults to test@campuscoin.com / Test@1234
  */
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const mysql = require('mysql2/promise');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const run = async () => {
+  if (process.env.NODE_ENV === 'production') throw new Error('Test users cannot be created in production');
   const email = (process.argv[2] || 'test@campuscoin.com').toLowerCase().trim();
   const password = process.argv[3] || 'Test@1234';
 
@@ -31,6 +33,7 @@ const run = async () => {
       process.exit(1);
     }
 
+    await connection.beginTransaction();
     const hash = await bcrypt.hash(password, 12);
     const [result] = await connection.execute(
       "INSERT INTO users (email, password_hash, role, status, email_verified) VALUES (?, ?, 'student', 'active', 1)",
@@ -65,9 +68,14 @@ const run = async () => {
       );
     }
 
+    await connection.execute('UPDATE accounts SET balance = balance - ? WHERE id = ?', [(cats[0]?500:0)+(cats[1]?300:0),accountId]);
+    await connection.commit();
     console.log('✓ Test student user created successfully:');
     console.log(`  Email: ${email}`);
-    console.log(`  Password: ${password}`);
+
+  } catch (error) {
+    await connection.rollback();
+    throw error;
   } finally {
     await connection.end();
   }

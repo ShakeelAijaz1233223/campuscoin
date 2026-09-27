@@ -113,13 +113,13 @@ const TransactionModel = {
     );
   },
 
-  async getMonthlyTotals(userId, months = 6) {
+  async getMonthlyTotals(userId, months = 6, endDate = new Date().toISOString().slice(0,10)) {
     return db.query(
       `SELECT YEAR(date) as year, MONTH(date) as month, type,
        COALESCE(SUM(amount), 0) as total, COUNT(id) as count
-       FROM transactions WHERE user_id = ? AND date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH) AND status = 'active'
+       FROM transactions WHERE user_id = ? AND date >= DATE_SUB(DATE_FORMAT(?, '%Y-%m-01'), INTERVAL ? MONTH) AND date <= ? AND status = 'active'
        GROUP BY YEAR(date), MONTH(date), type ORDER BY year, month`,
-      [userId, months]
+      [userId, endDate, months - 1, endDate]
     );
   },
 

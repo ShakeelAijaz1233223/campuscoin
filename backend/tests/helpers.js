@@ -4,6 +4,8 @@
  * Run tests with: npm test  (NODE_ENV=test is set automatically)
  */
 process.env.NODE_ENV = 'test';
+// Never default integration fixtures into the application's campuscoin database.
+process.env.DB_NAME = process.env.DB_NAME || 'campuscoin_test';
 
 const app = require('../src/app');
 const mysql = require('mysql2/promise');

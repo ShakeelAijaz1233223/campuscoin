@@ -30,6 +30,7 @@ const BudgetModel = {
   async update(id, data) {
     const fields = [];
     const values = [];
+    for(const key of ['category_id','month','year']){if(data[key]!==undefined){fields.push(`${key} = ?`);values.push(data[key]);}}
     if (data.amount !== undefined) { fields.push('amount = ?'); values.push(data.amount); }
     if (data.spent !== undefined) { fields.push('spent = ?'); values.push(data.spent); }
     if (data.status !== undefined) { fields.push('status = ?'); values.push(data.status); }
@@ -56,6 +57,7 @@ const BudgetModel = {
     const endOfMonth = new Date(year, month, 0);
     const endDate = `${year}-${String(month).padStart(2, '0')}-${String(endOfMonth.getDate()).padStart(2, '0')}`;
 
+    await db.update('UPDATE budgets SET spent = 0 WHERE user_id = ? AND month = ? AND year = ?', [userId,month,year]);
     const results = await db.query(
       `SELECT category_id, COALESCE(SUM(amount), 0) as total
        FROM transactions WHERE user_id = ? AND type = 'expense' AND date >= ? AND date <= ? AND status = 'active'

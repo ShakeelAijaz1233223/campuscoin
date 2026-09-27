@@ -10,7 +10,7 @@ const generateInsight = asyncHandler(async (req, res) => {
 
 const getInsights = asyncHandler(async (req, res) => {
   const pagination = getPagination(req.query);
-  const result = await insightService.getInsights(req.user.id, pagination);
+  const result = await insightService.getInsights(req.user.id, {...pagination, month:req.query.month, year:req.query.year});
   const meta = buildPaginationMeta(result.total, pagination.page, pagination.limit);
   return sendPaginated(res, { insights: result.insights }, meta, 'Insights retrieved');
 });

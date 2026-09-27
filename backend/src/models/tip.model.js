@@ -5,9 +5,14 @@ const TipModel = {
     return db.getOne('SELECT * FROM tips WHERE id = ?', [id]);
   },
 
-  async findAll({ category = '', page = 1, limit = 20 } = {}) {
-    let where = ["status = 'active'"];
+  async findAll({ category = '', page = 1, limit = 20, userId, includeInactive = false } = {}) {
+    let where = [includeInactive?'1=1':"status = 'active'"];
     let params = [];
+    if (userId) {
+      const raw = await require('./setting.model').get(userId, 'dismissed_tips');
+      const ids = (raw ? JSON.parse(raw) : []).filter(x=>/^\d+$/.test(String(x))).map(Number);
+      if(ids.length){where.push(`id NOT IN (${ids.map(()=>'?').join(',')})`);params.push(...ids);}
+    }
     if (category) { where.push('category = ?'); params.push(category); }
     const countResult = await db.getOne(`SELECT COUNT(*) as total FROM tips WHERE ${where.join(' AND ')}`, params);
     const offset = (page - 1) * limit;
@@ -21,8 +26,8 @@ const TipModel = {
 
   async create(data) {
     const result = await db.insert(
-      'INSERT INTO tips (title, content, category, priority, is_system) VALUES (?, ?, ?, ?, ?)',
-      [data.title, data.content, data.category || null, data.priority || 0, data.is_system ? 1 : 0]
+      'INSERT INTO tips (title, content, category, priority, is_system, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [data.title, data.content, data.category || null, data.priority || 0, data.is_system ? 1 : 0, data.status || 'active']
     );
     return { id: result.insertId };
   },
@@ -40,7 +45,7 @@ const TipModel = {
   },
 
   async delete(id) {
-    return db.update("UPDATE tips SET status = 'inactive' WHERE id = ?", [id]);
+    return db.remove('DELETE FROM tips WHERE id = ?', [id]);
   },
 
   async search(query) {

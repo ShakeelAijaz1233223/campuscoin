@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Seed script: loads development/test data.
- * Idempotent — skips seeding if users already exist unless --force is passed.
+ * Seeds reference categories/settings/tips only by default.
+ * Sample financial data requires explicit --demo and an empty development DB.
  */
 const bcrypt = require('bcryptjs');
 const mysql = require('mysql2/promise');
@@ -9,7 +9,9 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const run = async () => {
-  const force = process.argv.includes('--force');
+  const demo = process.argv.includes('--demo');
+  if (process.argv.includes('--force')) throw new Error('Destructive seeding is disabled. Use a separate disposable database for demos.');
+  if (demo && process.env.NODE_ENV === 'production') throw new Error('Demo data cannot be seeded in production');
 
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
@@ -21,30 +23,11 @@ const run = async () => {
   });
 
   try {
-    const [existing] = await connection.query('SELECT COUNT(*) as count FROM users');
-    if (existing[0].count > 0 && !force) {
-      console.log('Database already contains users. Use --force to seed anyway.');
-      return;
-    }
-    if (force) {
-      console.log('→ Force mode: clearing existing data...');
-      await connection.query('SET FOREIGN_KEY_CHECKS = 0');
-      for (const table of ['users', 'profiles', 'accounts', 'categories', 'transactions', 'recurring_transactions',
-        'budgets', 'goals', 'goal_contributions', 'bills', 'insights', 'tips', 'tip_bookmarks', 'insight_bookmarks',
-        'notes', 'notifications', 'announcements', 'imports', 'import_rows', 'ai_category_suggestions',
-        'ai_correction_history', 'activities', 'settings', 'analytics_snapshots', 'system_settings']) {
-        await connection.query(`TRUNCATE TABLE \`${table}\``);
-      }
-      await connection.query('SET FOREIGN_KEY_CHECKS = 1');
-    }
-
-    console.log('→ Seeding system settings...');
-    await connection.query(`
-      INSERT INTO system_settings (setting_key, setting_value, description) VALUES
-      ('app_name', 'CampusCoin', 'Application name'),
-      ('app_version', '1.0.0', 'Application version'),
-      ('maintenance_mode', 'false', 'Maintenance mode toggle')
-    `);
+    await require('../database/defaults')(connection);
+    console.log('✓ Reference categories, settings and educational tips are ready. No financial data added.');
+    if (!demo) return;
+    const [[existing]] = await connection.query('SELECT COUNT(*) AS count FROM users');
+    if (existing.count > 0) throw new Error('Demo seed requires an empty database; existing users were not changed');
 
     console.log('→ Creating admin account (admin@campuscoin.com / Admin@123)...');
     const adminHash = await bcrypt.hash('Admin@123', 12);
@@ -69,29 +52,6 @@ const run = async () => {
       [studentId]
     );
 
-    console.log('→ Creating default categories...');
-    const incomeCategories = [
-      ['Allowance', 'wallet', '#4CAF50'], ['Part-time Job', 'briefcase', '#2196F3'],
-      ['Scholarship', 'award', '#9C27B0'], ['Gift', 'gift', '#FF9800'], ['Other Income', 'plus-circle', '#607D8B']
-    ];
-    for (let i = 0; i < incomeCategories.length; i++) {
-      await connection.query(
-        "INSERT INTO categories (user_id, name, type, icon, color, is_default, sort_order) VALUES (NULL, ?, 'income', ?, ?, 1, ?)",
-        [...incomeCategories[i], i + 1]
-      );
-    }
-    const expenseCategories = [
-      ['Food', 'utensils', '#F44336'], ['Transport', 'bus', '#FF9800'], ['Hostel/Rent', 'home', '#795548'],
-      ['Academics', 'book', '#3F51B5'], ['Subscriptions', 'tv', '#E91E63'], ['Entertainment', 'music', '#9C27B0'],
-      ['Miscellaneous', 'grid', '#607D8B']
-    ];
-    for (let i = 0; i < expenseCategories.length; i++) {
-      await connection.query(
-        "INSERT INTO categories (user_id, name, type, icon, color, is_default, sort_order) VALUES (NULL, ?, 'expense', ?, ?, 1, ?)",
-        [...expenseCategories[i], i + 1]
-      );
-    }
-
     console.log('→ Creating student accounts...');
     const [cash] = await connection.query(
       "INSERT INTO accounts (user_id, name, type, balance, is_default) VALUES (?, 'Cash Wallet', 'cash', 5000, 1)",
@@ -108,11 +68,9 @@ const run = async () => {
     const cashId = cash.insertId;
     const bankId = bank.insertId;
 
-    // Category ids: income 1-5, expense 6-12 (based on insert order above)
-    const cat = {
-      allowance: 1, job: 2, scholarship: 3, gift: 4, otherIncome: 5,
-      food: 6, transport: 7, rent: 8, academics: 9, subs: 10, entertainment: 11, misc: 12
-    };
+    const [categories] = await connection.query('SELECT id, name FROM categories WHERE user_id IS NULL AND is_default = 1');
+    const id = name => categories.find(c => c.name === name).id;
+    const cat = {allowance:id('Allowance'),job:id('Part-time Job'),scholarship:id('Scholarship'),gift:id('Gift'),otherIncome:id('Other Income'),food:id('Food'),transport:id('Transport'),rent:id('Hostel/Rent'),academics:id('Academics'),subs:id('Subscriptions'),entertainment:id('Entertainment'),misc:id('Miscellaneous')};
 
     console.log('→ Creating realistic student transactions (last 2 months)...');
     const now = new Date();
@@ -221,26 +179,6 @@ const run = async () => {
       "INSERT INTO recurring_transactions (user_id, account_id, category_id, type, amount, description, frequency, start_date, next_occurrence) VALUES (?, ?, ?, 'income', 15000, 'Monthly allowance', 'monthly', DATE_SUB(CURDATE(), INTERVAL 1 MONTH), DATE_ADD(CURDATE(), INTERVAL 1 MONTH))",
       [studentId, cashId, cat.allowance]
     );
-
-    console.log('→ Creating system saving tips...');
-    const tips = [
-      ['Track Every Expense', 'The key to financial health is knowing where your money goes. Record even the smallest purchases.', 'general', 10],
-      ['Use the 50/30/20 Rule', 'Try to spend 50% on needs, 30% on wants, and save 20% of your income.', 'savings', 9],
-      ['Cook More, Eat Out Less', 'Preparing meals at home can save you up to 60% on food expenses compared to eating out.', 'food', 8],
-      ['Use Student Discounts', 'Always ask for student discounts. Many services offer special rates for students.', 'general', 7],
-      ['Set Up an Emergency Fund', 'Aim to save at least one month of expenses for unexpected costs.', 'savings', 9],
-      ['Review Subscriptions Monthly', 'Cancel subscriptions you rarely use to save money.', 'subscriptions', 6],
-      ['Walk or Cycle When Possible', 'Short distances can be walked instead of using transport — saving money and improving health.', 'transport', 5],
-      ['Buy Used Textbooks', 'Second-hand textbooks or library copies cut academic costs significantly.', 'academics', 7],
-      ['Avoid Impulse Purchases', 'Wait 24 hours before non-essential purchases. You may find you do not need the item.', 'general', 8],
-      ['Set Monthly Budget Limits', 'Create budgets for each spending category and track progress throughout the month.', 'budgeting', 10]
-    ];
-    for (const [title, content, category, priority] of tips) {
-      await connection.query(
-        'INSERT INTO tips (title, content, category, priority, is_system) VALUES (?, ?, ?, ?, 1)',
-        [title, content, category, priority]
-      );
-    }
 
     console.log('→ Creating sample insight...');
     await connection.query(

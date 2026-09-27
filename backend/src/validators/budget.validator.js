@@ -8,6 +8,8 @@ const createBudgetValidator = [
 ];
 
 const updateBudgetValidator = [
+  body('month').optional().isInt({min:1,max:12}),
+  body('year').optional().isInt({min:2000,max:2100}),
   param('id').isInt({ min: 1 }).withMessage('Invalid budget id'),
   body('amount').optional().isFloat({ gt: 0 }),
   body('category_id').optional().isInt({ min: 1 })

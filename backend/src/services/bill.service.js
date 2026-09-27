@@ -62,6 +62,7 @@ const updateBill = async (userId, id, data, ip = null) => {
     if (!category || (category.user_id !== userId && category.is_default !== 1)) throw new BadRequestError('Invalid category');
   }
 
+  if(data.is_paid !== undefined)data.paid_date=data.is_paid?new Date().toISOString().slice(0,10):null;
   await BillModel.update(id, data);
   await ActivityModel.create(userId, 'updated', 'bill', id, `Updated bill: ${bill.name}`, null, ip);
   return enrichBill(await BillModel.findById(id));

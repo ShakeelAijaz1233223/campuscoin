@@ -29,7 +29,7 @@ const updateProfile = async (userId, data) => {
   await ProfileModel.update(userId, data);
   const updated = await ProfileModel.findByUserId(userId);
   await ActivityModel.create(userId, 'updated', 'profile', profile.id, 'Profile updated');
-  return updated;
+  return {...updated, email:user.email, id:user.id};
 };
 
 const updatePreferences = async (userId, prefs) => {

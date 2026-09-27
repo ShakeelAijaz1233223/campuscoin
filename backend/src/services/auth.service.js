@@ -21,7 +21,7 @@ const validatePassword = (password) => {
   return errors;
 };
 
-const register = async ({ email, password, first_name, last_name, academic_year }) => {
+const register = async ({ email, password, first_name, last_name, academic_year, monthly_allowance = 0 }) => {
   const passwordErrors = validatePassword(password);
   if (passwordErrors.length > 0) throw new BadRequestError('Password does not meet requirements', passwordErrors);
 
@@ -37,8 +37,8 @@ const register = async ({ email, password, first_name, last_name, academic_year 
     const userId = userResult.insertId;
 
     await conn.execute(
-      'INSERT INTO profiles (user_id, first_name, last_name, academic_year) VALUES (?, ?, ?, ?)',
-      [userId, first_name, last_name || null, academic_year || 'freshman']
+      'INSERT INTO profiles (user_id, first_name, last_name, academic_year, monthly_allowance) VALUES (?, ?, ?, ?, ?)',
+      [userId, first_name, last_name || null, academic_year || 'freshman', monthly_allowance]
     );
 
     // Seed default accounts for a quick start
@@ -48,6 +48,10 @@ const register = async ({ email, password, first_name, last_name, academic_year 
     );
 
     return userId;
+  }).catch(error => {
+    // The unique email constraint is authoritative when submissions race.
+    if (error.code === 'ER_DUP_ENTRY') throw new ConflictError('An account with this email already exists');
+    throw error;
   });
 
   const user = await UserModel.findById(result);
@@ -104,6 +108,7 @@ const logout = async (userId) => {
 };
 
 const forgotPassword = async (email) => {
+  if(env.NODE_ENV==='production'&&!process.env.SMTP_HOST){throw new (require('../utils/errors').AppError)('Password reset email is not configured. Contact the administrator.',503);}
   const user = await UserModel.findByEmail(email.toLowerCase().trim());
   // Always return success to avoid email enumeration
   if (!user) return { sent: true };
@@ -112,7 +117,8 @@ const forgotPassword = async (email) => {
   const expiresAt = new Date(Date.now() + env.RESET_TOKEN_EXPIRY);
   await PasswordResetModel.create(user.id, hashedToken, expiresAt);
 
-  // In production this token would be emailed. For this deployment it is
+  await require('./mail.service').sendPasswordReset(email, resetToken);
+  // In production this token is emailed. For this deployment it is
   // returned only in non-production so the flow is testable end-to-end.
   return { sent: true, resetToken: env.NODE_ENV === 'production' ? undefined : resetToken };
 };
@@ -127,6 +133,10 @@ const resetPassword = async ({ token, password }) => {
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   await db.transaction(async (conn) => {
+    // Serialize resets for this user, then re-check the token under the lock.
+    await conn.execute('SELECT id FROM users WHERE id = ? FOR UPDATE', [reset.user_id]);
+    const [valid] = await conn.execute('SELECT id FROM password_resets WHERE id = ? AND used = 0 AND expires_at > NOW() FOR UPDATE', [reset.id]);
+    if (!valid.length) throw new BadRequestError('Invalid or expired reset token');
     await conn.execute('UPDATE users SET password_hash = ?, failed_login_attempts = 0, locked_until = NULL WHERE id = ?', [passwordHash, reset.user_id]);
     await conn.execute('UPDATE password_resets SET used = 1 WHERE id = ?', [reset.id]);
     // Invalidate all other outstanding tokens for this user

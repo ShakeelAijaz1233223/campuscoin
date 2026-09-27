@@ -1,3 +1,4 @@
+const { setSession, clearSession } = require('../utils/session');
 const asyncHandler = require('../utils/asyncHandler');
 const authService = require('../services/auth.service');
 const { sendSuccess, sendCreated } = require('../utils/response');
@@ -9,11 +10,13 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
   const result = await authService.login({ ...req.body, ip: req.ip });
-  return sendSuccess(res, { user: result.user, token: result.token }, 'Login successful');
+  setSession(res, result.token);
+  return sendSuccess(res, { user: await authService.getMe(result.user.id), token: result.token }, 'Login successful');
 });
 
 const logout = asyncHandler(async (req, res) => {
   await authService.logout(req.user.id);
+  clearSession(res);
   return sendSuccess(res, null, 'Logged out successfully');
 });
 

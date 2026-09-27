@@ -63,10 +63,11 @@ const createBudget = async (userId, data, ip = null) => {
   if (data.amount <= 0) throw new BadRequestError('Budget amount must be positive');
 
   const existing = await BudgetModel.findByUserAndCategory(userId, data.category_id, data.month, data.year);
-  if (existing) throw new ConflictError(`A budget for this category already exists for ${data.month}/${data.year}`);
+  if (existing && existing.status === 'active') throw new ConflictError(`A budget for this category already exists for ${data.month}/${data.year}`);
 
   data.user_id = userId;
-  const result = await BudgetModel.create(data);
+  const result = existing ? {id:existing.id} : await BudgetModel.create(data);
+  if(existing)await BudgetModel.update(existing.id,{amount:data.amount,status:'active'});
 
   // Calculate spent and generate alert if applicable
   await BudgetModel.recalculateSpent(userId, data.month, data.year);
@@ -89,18 +90,18 @@ const updateBudget = async (userId, id, data, ip = null) => {
   const budget = await BudgetModel.findById(id);
   if (!budget || budget.user_id !== userId) throw new NotFoundError('Budget not found');
 
-  if (data.category_id && data.category_id !== budget.category_id) {
-    const category = await CategoryModel.findById(data.category_id);
-    if (!category) throw new BadRequestError('Invalid category');
+  if (data.category_id || data.month || data.year) {
+    const category = await CategoryModel.findById(data.category_id || budget.category_id);
+    if (!category || (category.user_id !== userId && category.is_default !== 1)) throw new BadRequestError('Invalid category');
     if (category.type !== 'expense') throw new BadRequestError('Budgets can only be set for expense categories');
-    const dup = await BudgetModel.findByUserAndCategory(userId, data.category_id, budget.month, budget.year);
-    if (dup) throw new ConflictError('A budget for this category already exists for this month');
+    const dup = await BudgetModel.findByUserAndCategory(userId, data.category_id || budget.category_id, data.month || budget.month, data.year || budget.year);
+    if (dup && dup.id !== id) throw new ConflictError('A budget for this category already exists for this month');
   }
 
   if (data.amount !== undefined && data.amount <= 0) throw new BadRequestError('Budget amount must be positive');
 
   await BudgetModel.update(id, data);
-  await BudgetModel.recalculateSpent(userId, budget.month, budget.year);
+  await BudgetModel.recalculateSpent(userId, data.month || budget.month, data.year || budget.year);
   await ActivityModel.create(userId, 'updated', 'budget', id, `Updated budget`, null, ip);
   return enrichBudget(await BudgetModel.findById(id));
 };
