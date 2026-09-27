@@ -60,24 +60,35 @@ jobs:
             sha256sum mysql.tar.xz
             stat -c%s mysql.tar.xz
           fi
-      - name: Commit artifact to this branch
+      - name: Commit artifact via GitHub API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          echo "::notice::step: begin; bytes=$(stat -c%s mysql.tar.xz)"
-          mkdir -p .arena-artifacts
-          mv mysql.tar.xz .arena-artifacts/mysql-minimal.tar.xz
-          echo "::notice::step: moved into .arena-artifacts"
-          git config user.name "arena-infra-relay"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          echo "::notice::step: git identity configured"
-          git add .arena-artifacts/mysql-minimal.tar.xz 2>/tmp/add_err.txt || { echo "::error title=git add::$(head -c 500 /tmp/add_err.txt)"; exit 1; }
-          echo "::notice::step: staged"
-          git status --short | head -5
-          git commit -m "chore(infra): stage MySQL runtime artifact for sandbox verification [skip ci]" 2>/tmp/commit_err.txt || { echo "::error title=git commit::$(head -c 500 /tmp/commit_err.txt)"; exit 1; }
-          echo "::notice::step: committed $(git rev-parse --short HEAD)"
-          if git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}" >/tmp/push_out.txt 2>/tmp/push_err.txt; then
-            echo "::notice::step: pushed"
-          else
-            echo "::error title=git push::$(head -c 800 /tmp/push_err.txt | tr '\n' ' ')"
-            exit 1
-          fi
+          echo "::notice::step: begin api commit; bytes=$(stat -c%s mysql.tar.xz)"
+          B64=$(base64 -w0 mysql.tar.xz)
+          echo "::notice::step: base64 length ${#B64}"
+          BLOB_SHA=$(echo "{\"content\":\"$B64\",\"encoding\":\"base64\"}" | curl -sf -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs --data @- | python3 -c "import json,sys;print(json.load(sys.stdin)['sha'])")
+          echo "::notice::step: blob uploaded $BLOB_SHA"
+          REF=$(curl -sf -H "Authorization: Bearer ${GH_TOKEN}" https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/${GITHUB_REF_NAME})
+          BASE_SHA=$(echo "$REF" | python3 -c "import json,sys;print(json.load(sys.stdin)['object']['sha'])")
+          BASE_TREE=$(curl -sf -H "Authorization: Bearer ${GH_TOKEN}" https://api.github.com/repos/${GITHUB_REPOSITORY}/git/commits/$BASE_SHA | python3 -c "import json,sys;print(json.load(sys.stdin)['tree']['sha'])")
+          echo "::notice::step: base $BASE_SHA tree $BASE_TREE"
+          TREE_SHA=$(curl -sf -X POST -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/trees --data @- <<EOF | python3 -c "import json,sys;print(json.load(sys.stdin)['sha'])"
+          {"base_tree":"$BASE_TREE","tree":[{"path":".arena-artifacts/mysql-minimal.tar.xz","mode":"100644","type":"blob","sha":"$BLOB_SHA"}]}
+EOF
+          )
+          echo "::notice::step: tree created $TREE_SHA"
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          COMMIT_SHA=$(curl -sf -X POST -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/commits --data @- <<EOF | python3 -c "import json,sys;print(json.load(sys.stdin)['sha'])"
+          {"message":"chore(infra): stage MySQL runtime artifact for sandbox verification [skip ci]","tree":"$TREE_SHA","parents":["$BASE_SHA"],"author":{"name":"arena-infra-relay","email":"41898282+github-actions[bot]@users.noreply.github.com","date":"$NOW"}}
+EOF
+          )
+          echo "::notice::step: commit created $COMMIT_SHA"
+          curl -sf -X POST -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/heads/${GITHUB_REF_NAME}/sha --data "{\"sha\":\"$COMMIT_SHA\"}" >/dev/null
+          echo "::notice::step: ref updated"
