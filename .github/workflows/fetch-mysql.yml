@@ -65,7 +65,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          import base64, json, os, datetime
+          import base64, json, os, datetime, subprocess
           from urllib.request import Request, urlopen
           from urllib.error import HTTPError
 
@@ -74,13 +74,10 @@ jobs:
           ref = os.environ['GITHUB_REF_NAME']
           api = 'https://api.github.com/repos/' + repo
 
-          def call(method, path, payload=None, raw=None):
+          def call(method, path, payload=None):
               data = None
               headers = {'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json'}
-              if raw is not None:
-                  data = raw
-                  headers['Content-Type'] = 'application/octet-stream'
-              elif payload is not None:
+              if payload is not None:
                   data = json.dumps(payload).encode()
                   headers['Content-Type'] = 'application/json'
               req = Request(api + path, data=data, headers=headers, method=method)
@@ -92,15 +89,25 @@ jobs:
                   print('::error::' + path + ' -> HTTP ' + str(e.code) + ' ' + e.read().decode()[:400])
                   raise
 
-          content = open('mysql.tar.xz', 'rb').read()
-          print('::notice::artifact bytes: ' + str(len(content)))
-          blob = call('POST', '/git/blobs', {'content': base64.b64encode(content).decode(), 'encoding': 'base64'})
-          print('::notice::blob uploaded ' + blob['sha'])
+          size = os.path.getsize('mysql.tar.xz')
+          print('::notice::artifact bytes: ' + str(size))
+          part_size = 24 * 1024 * 1024
+          names = []
+          with open('mysql.tar.xz', 'rb') as f:
+              index = 1
+              while True:
+                  chunk = f.read(part_size)
+                  if not chunk:
+                      break
+                  name = '.arena-artifacts/mysql-minimal.tar.xz.part%02d' % index
+                  names.append(name)
+                  blob = call('POST', '/git/blobs', {'content': base64.b64encode(chunk).decode(), 'encoding': 'base64'})
+                  print('::notice::uploaded %s (%d bytes) -> %s' % (name, len(chunk), blob['sha']))
+                  names[index - 1] = {'path': name, 'mode': '100644', 'type': 'blob', 'sha': blob['sha']}
+                  index += 1
           base_sha = call('GET', '/git/ref/heads/' + ref)['object']['sha']
           base_tree = call('GET', '/git/commits/' + base_sha)['tree']['sha']
-          tree = call('POST', '/git/trees', {'base_tree': base_tree, 'tree': [
-              {'path': '.arena-artifacts/mysql-minimal.tar.xz', 'mode': '100644', 'type': 'blob', 'sha': blob['sha']}
-          ]})
+          tree = call('POST', '/git/trees', {'base_tree': base_tree, 'tree': names})
           now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
           commit = call('POST', '/git/commits', {
               'message': 'chore(infra): stage MySQL runtime artifact for sandbox verification [skip ci]',
@@ -109,4 +116,4 @@ jobs:
           })
           print('::notice::commit created ' + commit['sha'])
           call('PATCH', '/git/refs/heads/' + ref, {'sha': commit['sha'], 'force': False})
-          print('::notice::ref updated; relay complete')
+          print('::notice::ref updated; relay complete with %d parts' % len(names))
