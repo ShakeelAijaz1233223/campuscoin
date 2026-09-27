@@ -3,10 +3,6 @@
   .app-header{padding:0 44px}
   .hero-card{min-height:330px}
 }
-@media(max-width:1500px){
-  .dashboard-grid>.span-eight,.dashboard-grid>.span-two,.dashboard-grid>.insight-card{grid-column:span 12}
-  .dashboard-grid>.span-four{grid-column:span 6}
-}
 @media(max-width:1280px){
   :root{--sidebar-width:240px}
   .sidebar{padding:20px 13px 14px}

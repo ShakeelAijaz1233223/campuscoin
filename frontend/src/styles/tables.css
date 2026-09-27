@@ -2,6 +2,8 @@
 .collection-toolbar{padding:19px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:15px;flex-wrap:wrap}
 .collection-toolbar h3{font-size:.92rem;margin:0;font-weight:700}
 .collection-toolbar .compact-search{max-width:220px;font-size:.72rem;min-height:37px;border-radius:999px;padding-left:16px}
+.collection>label.field{margin:16px 24px 4px;max-width:280px}
+@media(max-width:760px){.collection>label.field{margin:14px 16px 2px}}
 .table-scroll{overflow-x:auto;max-width:100%;scrollbar-width:thin}
 table{border-collapse:collapse;text-align:left;width:100%;font-size:.75rem}
 th{padding:13px 18px;color:var(--dim);text-transform:capitalize;letter-spacing:.06em;font-size:.6rem;font-weight:700;white-space:nowrap;border-bottom:1px solid var(--border);background:var(--surface-2);text-transform:uppercase}

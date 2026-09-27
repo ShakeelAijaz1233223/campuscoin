@@ -76,6 +76,41 @@ jobs:
           node tests/e2e/screenshots.mjs 2>&1 | tee ../shots.log
         env:
           E2E_BASE_URL: http://127.0.0.1:5173
+      - name: Multi-viewport layout, console and network probe
+        working-directory: frontend
+        run: |
+          cat > probe.mjs <<'EOF'
+          import {chromium} from 'playwright-core';
+          const browser = await chromium.launch({args:['--no-sandbox','--disable-dev-shm-usage']});
+          const results = [];
+          for (const width of [320,375,390,414,480,768,820,1024,1280,1440,1920]) {
+            const ctx = await browser.newContext({viewport:{width, height: Math.max(900, Math.round(width*0.64))}});
+            const page = await ctx.newPage();
+            const errors = [];
+            page.on('pageerror', e => errors.push(e.message));
+            page.on('response', r => { if (r.url().includes('/api/v1/') && r.status() >= 400) errors.push(r.status() + ' ' + new URL(r.url()).pathname); });
+            const email = 'probe.' + width + '.' + Date.now() + '@test.local';
+            const reg = await page.request.post('http://127.0.0.1:5173/api/v1/auth/register', {data:{email, password:'Probe@12345', first_name:'Probe', last_name:String(width)}});
+            if (reg.status() !== 201) { results.push(width + 'px REGISTER-FAIL ' + reg.status()); await ctx.close(); continue; }
+            await page.goto('http://127.0.0.1:5173/login');
+            await page.getByLabel('Email address').fill(email);
+            await page.getByLabel('Password', {exact:true}).fill('Probe@12345');
+            await page.getByRole('button', {name:'Sign in to your workspace'}).click();
+            await page.waitForURL(/dashboard/, {timeout: 20000});
+            let worst = 0;
+            for (const path of ['/dashboard','/transactions','/reports','/settings']) {
+              await page.goto('http://127.0.0.1:5173' + path);
+              await page.waitForLoadState('networkidle');
+              const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+              worst = Math.max(worst, over);
+            }
+            results.push(width + 'px overflow=' + worst + 'px errors=' + JSON.stringify(errors));
+            await ctx.close();
+          }
+          console.log(results.join('\n'));
+          await browser.close();
+          EOF
+          node probe.mjs > ../probe.log 2>&1; cat ../probe.log
       - name: Commit screenshots and e2e log via git data API
         if: always()
         shell: python
@@ -106,7 +141,7 @@ jobs:
                   print('::error::' + path + ' -> HTTP ' + str(e.code) + ' ' + e.read().decode()[:400])
                   raise
 
-          files = sorted(glob.glob('frontend/screenshots-out/*.png')) + ['e2e-log.txt', 'shots.log', 'api.log']
+          files = sorted(glob.glob('frontend/screenshots-out/*.png')) + ['e2e-log.txt', 'shots.log', 'probe.log', 'api.log']
           tree_entries = []
           for fp in files:
               if not os.path.exists(fp):
