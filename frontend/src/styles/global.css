@@ -125,7 +125,7 @@ main{outline:none}
 .profile-tile>.icon-button{margin-left:auto}
 
 /* ---------- Header ---------- */
-.app-main{margin-left:var(--sidebar-width);min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.app-main{margin-left:var(--sidebar-width);min-width:0;display:flex;flex-direction:column;min-height:100vh;overflow-x:clip}
 .app-header{position:sticky;top:0;z-index:30;height:66px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 30px;gap:15px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px)}
 .breadcrumbs{display:flex;align-items:center;gap:9px;font-size:.72rem;color:var(--dim);font-weight:550}
 .breadcrumbs>span{display:flex;align-items:center;gap:8px;text-transform:capitalize}
