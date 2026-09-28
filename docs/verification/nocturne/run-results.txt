@@ -1,0 +1,72 @@
+CampusCoin Nocturne verification — 2026-09-28
+Local Node 22 / MySQL 5.7.29 / Chromium. Not a production-services certificate.
+
+COMMAND: npm test (exit 0)
+# tests 143
+# pass 143
+# fail 0
+# skipped 0
+# duration_ms 15436.26458
+# tests 13
+# pass 13
+# fail 0
+# skipped 0
+# duration_ms 237.478446
+
+COMMAND: npm run build (exit 0)
+dist/assets/index-DD5TjJ0N.css                              98.00 kB │ gzip:  21.20 kB
+dist/assets/index-txVnsL7l.js                              322.25 kB │ gzip: 102.13 kB
+dist/assets/FinancialChart-DSxnMdVh.js                     424.58 kB │ gzip: 114.91 kB
+✓ built in 9.95s
+
+COMMANDS: npm audit --prefix frontend --audit-level=moderate; npm audit --prefix backend --audit-level=moderate
+Both: found 0 vulnerabilities
+
+Migration/default seed rerun: compared user/financial rows preserved; schema has 262 columns.
+
+
+> campuscoin@1.0.0 test:e2e
+> npm --prefix frontend run test:e2e --
+
+
+> campuscoin-frontend@1.0.0 test:e2e
+> playwright test
+
+
+Running 31 tests using 1 worker
+
+  ✓   1 tests/e2e/connected.spec.js:13:1 › login cookie, reload, logout, CSRF and role authorization (2.7s)
+  ✓   2 tests/e2e/connected.spec.js:18:1 › all student routes consume real backend data without runtime/API errors (19.2s)
+  ✓   3 tests/e2e/connected.spec.js:24:1 › transaction create, AI, update, filter, dashboard and delete (5.1s)
+  ✓   4 tests/e2e/connected.spec.js:31:1 › category, budget, goal, bill, recurring and notes persist (14.8s)
+  ✓   5 tests/e2e/connected.spec.js:39:1 › CSV upload, category correction, duplicates and confirmation (2.8s)
+  ✓   6 tests/e2e/connected.spec.js:46:1 › reports download PDF, CSV and JSON; six-month range (2.4s)
+  ✓   7 tests/e2e/connected.spec.js:51:1 › insights, bookmarks, tips and unread notifications (6.2s)
+  ✓   8 tests/e2e/connected.spec.js:56:1 › profile and notification settings survive reload (5.0s)
+  ✓   9 tests/e2e/connected.spec.js:60:1 › registration and development password reset through actual forms (2.2s)
+  ✓  10 tests/e2e/connected.spec.js:65:1 › admin statistics and content management use protected backend routes (11.3s)
+  ✓  11 tests/e2e/connected.spec.js:72:1 › accounts and admin user-access/tip actions persist (11.2s)
+  ✓  12 tests/e2e/connected.spec.js:80:1 › new budgets use the selected month and remain visible after save (2.5s)
+  ✓  13 tests/e2e/connected.spec.js:96:1 › empty CSV is rejected and cannot leave a previous file ready for import (2.0s)
+  ✓  14 tests/e2e/connected.spec.js:109:1 › registration policy, SQL persistence, login, authenticated dashboard and UI logout (2.7s)
+  ✓  15 tests/e2e/connected.spec.js:157:1 › sign out clears stale UI state when the browser session is already gone (1.7s)
+  ✓  16 tests/e2e/connected.spec.js:168:1 › change password from the profile page and sign back in (3.0s)
+  ✓  17 tests/e2e/frontend.spec.js:4:1 › public landing, navigation, responsive layout and reduced motion (1.2s)
+  ✓  18 tests/e2e/frontend.spec.js:5:1 › protected route, sign in, session restore, and admin denial (2.3s)
+  ✓  19 tests/e2e/frontend.spec.js:6:1 › transaction create, AI suggestion, edit, view and delete (3.7s)
+  ✓  20 tests/e2e/frontend.spec.js:7:1 › CSV preview, server validation and import confirmation (2.1s)
+  ✓  21 tests/e2e/frontend.spec.js:8:1 › student routes render without runtime errors and settings persist (11.4s)
+  ✓  22 tests/e2e/frontend.spec.js:9:1 › admin routes are available to administrators (4.6s)
+  ✓  23 tests/e2e/frontend.spec.js:10:1 › API failures show honest retry states without fabricated values (1.4s)
+  ✓  24 tests/e2e/nocturne.spec.js:20:1 › header quick-add refreshes an already mounted transaction list (3.0s)
+  ✓  25 tests/e2e/nocturne.spec.js:38:1 › dashboard mutation refreshes annual cash flow and current balance (2.1s)
+  ✓  26 tests/e2e/nocturne.spec.js:55:1 › annual chart failure is explicit and retry recovers real data (2.3s)
+  ✓  27 tests/e2e/nocturne.spec.js:79:1 › goal contributions persist, complete, and reopen through real APIs (4.0s)
+  ✓  28 tests/e2e/nocturne.spec.js:111:1 › mobile drawer traps focus, supports Escape and hides offscreen links (1.8s)
+  ✓  29 tests/e2e/nocturne.spec.js:133:1 › all student routes fit mobile, tablet and desktop in both color themes (2.8m)
+  ✓  30 tests/e2e/nocturne.spec.js:188:1 › key screens meet automated WCAG AA checks and reduced motion (6.5s)
+  ✓  31 tests/e2e/nocturne.spec.js:232:1 › public and admin screens fit small mobile and desktop without runtime errors (33.6s)
+
+  31 passed (5.8m)
+
+Final development-mode application-database smoke: UI registration → SQL bcrypt/zero balance → login/dashboard/reload/logout passed. Only the newly created identity was cleaned up. Original counts retained: 0 users, 0 transactions. Preview host 200; proxied anonymous /auth/me 401 as expected.

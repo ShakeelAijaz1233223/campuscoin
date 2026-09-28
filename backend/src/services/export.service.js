@@ -7,11 +7,7 @@ const { NotFoundError } = require('../utils/errors');
 
 const EXPORTS_DIR = path.join(__dirname, '../../exports');
 
-const csvEscape = (value) => {
-  const s = value === null || value === undefined ? '' : String(value);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-};
+const { escapeCSV: csvEscape } = require('../utils/csv');
 
 const toCSV = (records, fields) => {
   const header = fields.join(',');
@@ -24,9 +20,22 @@ const toCSV = (records, fields) => {
  * Returns { filePath, filename } for streaming to the client.
  */
 const exportTransactionsCSV = async (userId, filters = {}) => {
-  const { transactions } = await TransactionModel.findByUser(userId, { ...filters, page: 1, limit: 10000 });
+  const { transactions } = await TransactionModel.findByUser(userId, {
+    ...filters,
+    page: 1,
+    limit: 10000
+  });
 
-  const fields = ['date', 'type', 'amount', 'description', 'category_name', 'account_name', 'notes', 'created_at'];
+  const fields = [
+    'date',
+    'type',
+    'amount',
+    'description',
+    'category_name',
+    'account_name',
+    'notes',
+    'created_at'
+  ];
   const records = transactions.map((t) => ({
     date: t.date,
     type: t.type,
@@ -51,11 +60,26 @@ const exportTransactionsCSV = async (userId, filters = {}) => {
 };
 
 const exportTransactionsJSON = async (userId, filters = {}) => {
-  const { transactions } = await TransactionModel.findByUser(userId, { ...filters, page: 1, limit: 10000 });
+  const { transactions } = await TransactionModel.findByUser(userId, {
+    ...filters,
+    page: 1,
+    limit: 10000
+  });
   const filename = `transactions_export_${userId}_${Date.now()}.json`;
   const filePath = path.join(EXPORTS_DIR, filename);
   fs.mkdirSync(EXPORTS_DIR, { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify({ exported_at: new Date().toISOString(), count: transactions.length, transactions }, null, 2));
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify(
+      {
+        exported_at: new Date().toISOString(),
+        count: transactions.length,
+        transactions
+      },
+      null,
+      2
+    )
+  );
   setTimeout(() => fs.unlink(filePath, () => {}), 30 * 60 * 1000).unref();
   return { filePath, filename, count: transactions.length };
 };
@@ -66,4 +90,9 @@ const getFileStream = (filename) => {
   return filePath;
 };
 
-module.exports = { exportTransactionsCSV, exportTransactionsJSON, getFileStream, EXPORTS_DIR };
+module.exports = {
+  exportTransactionsCSV,
+  exportTransactionsJSON,
+  getFileStream,
+  EXPORTS_DIR
+};

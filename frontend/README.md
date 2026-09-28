@@ -1,6 +1,8 @@
 # CampusCoin frontend
 
 React 19 + Vite application connected to the Express/MySQL backend in `../backend`.
+Dark-first Nocturne UI with a complete light theme, self-hosted Inter Variable,
+shared glass tokens and reduced-motion support. See [design notes](../docs/REDESIGN_NOTES.md).
 See the [root setup guide](../README.md) and [implemented API contract](docs/API_CONTRACT.md).
 
 ```sh

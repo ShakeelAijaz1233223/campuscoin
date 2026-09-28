@@ -7,12 +7,15 @@ const generateAccessToken = (payload) => {
 };
 
 const verifyAccessToken = (token) => {
-  return jwt.verify(token, env.JWT_SECRET);
+  return jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
 };
 
 const generateResetToken = () => {
   const resetToken = crypto.randomBytes(32).toString('hex');
-  const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
   return { resetToken, hashedToken };
 };
 
@@ -20,4 +23,9 @@ const hashToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
-module.exports = { generateAccessToken, verifyAccessToken, generateResetToken, hashToken };
+module.exports = {
+  generateAccessToken,
+  verifyAccessToken,
+  generateResetToken,
+  hashToken
+};

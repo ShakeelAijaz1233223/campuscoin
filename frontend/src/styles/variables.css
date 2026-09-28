@@ -1,133 +1,179 @@
-/* CampusCoin — design tokens.
-   REFERENCE #5 (light): bright white canvas, pastel blue/cyan/lavender ambience,
-   blue primary with blue→purple gradient actions, pink/cyan supporting accents,
-   white glass cards with soft blue shadows.
-   REFERENCE #6 (dark): deep navy, electric blue/cyan/purple/pink neon,
-   translucent dark glass cards with luminous borders and soft glow.
-   The two themes share one layout and one component system. */
-:root{
-  color-scheme:light;
-  --bg:#f3f6fd;
-  --bg-canvas-a:rgba(147,197,253,.32);
-  --bg-canvas-b:rgba(196,181,253,.26);
-  --bg-canvas-c:rgba(103,232,249,.2);
-  --surface:#ffffff;
-  --surface-2:#f5f8fe;
-  --surface-hover:#eef3fd;
-  --glass:rgba(255,255,255,.82);
-  --text:#23324d;
-  --heading:#0b1b3a;
-  --muted:#5b6b8c;
-  --dim:#8a97b5;
-  --border:#e4eaf6;
-  --border-strong:#cdd8ee;
-  /* Primary = electric blue (reference #5) */
-  --accent:#3b7cf6;
-  --accent-strong:#2f66e0;
-  --accent-ink:#ffffff;
-  --accent-soft:#e8effe;
-  --accent-line:#c8d9fd;
-  --accent-glow:rgba(59,124,246,.26);
-  --blue:#3b7cf6;
-  --blue-soft:#e8effe;
-  --cyan:#0ea5cf;
-  --cyan-soft:#ddf3fb;
-  --purple:#7c5cf6;
-  --purple-soft:#eeeafe;
-  --pink:#ec5f9e;
-  --pink-soft:#fdeaf3;
-  --teal:#14b8a6;
-  --teal-soft:#dcf5f1;
-  --orange:#f5a524;
-  --orange-soft:#fdf1dc;
-  --danger:#e04b60;
-  --danger-soft:#fcebee;
-  --warning:#c07a10;
-  --warning-soft:#fbf1de;
-  --success:#16a56f;
-  --success-soft:#e2f6ec;
-  --chart-grid:#e9eef8;
-  --chart-1:#3b7cf6;
-  --chart-2:#22c3dd;
-  --chart-3:#8b5cf6;
-  --chart-4:#f5a524;
-  --chart-5:#ec5f9e;
-  --chart-6:#14b8a6;
-  --shadow:0 24px 60px -30px rgba(37,78,180,.26);
-  --shadow-sm:0 10px 26px -16px rgba(37,78,180,.2);
-  --shadow-hover:0 30px 70px -30px rgba(37,78,180,.3);
-  --radius:20px;
-  --radius-sm:13px;
-  --radius-xs:9px;
-  --sidebar-width:272px;
-  --font:Inter,'Inter var',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
-  /* Signature gradients */
-  --primary-grad:linear-gradient(120deg,#3b7cf6 0%,#7c5cf6 100%);
-  --primary-grad-soft:linear-gradient(120deg,rgba(59,124,246,.12) 0%,rgba(124,92,246,.1) 100%);
-  --hero-grad:linear-gradient(112deg,#eaf1fe 0%,#eaf6fd 45%,#f0edfe 100%);
-  --insight-grad:linear-gradient(140deg,#f1edfe 0%,#faf8ff 55%,#f2f7fe 100%);
-  --guidance-grad:linear-gradient(130deg,#3b7cf6 0%,#7c5cf6 100%);
-  --ring-grad:linear-gradient(135deg,#3b7cf6 0%,#22c3dd 55%,#7c5cf6 100%);
-  --waves:rgba(59,124,246,.16);
+/* CampusCoin / Nocturne — shared tokens. Dark by default; daylight is opt-in. */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #080a10;
+  --surface: #11141e;
+  --surface-2: #171b28;
+  --surface-hover: #1c2232;
+  --glass: rgba(19, 23, 35, 0.74);
+  --text: #dce1ef;
+  --heading: #f4f5fb;
+  --muted: #9ca6bd;
+  --dim: #818da7;
+  --border: rgba(177, 193, 231, 0.11);
+  --border-strong: rgba(177, 193, 231, 0.22);
+  --accent: #93e9ed;
+  --accent-strong: #93e9ed;
+  --accent-ink: #0b2027;
+  --accent-soft: rgba(116, 221, 230, 0.09);
+  --accent-line: rgba(147, 233, 237, 0.26);
+  --accent-glow: rgba(116, 221, 230, 0.16);
+  --blue: #809bff;
+  --blue-soft: rgba(128, 155, 255, 0.12);
+  --cyan: #93e9ed;
+  --cyan-soft: rgba(147, 233, 237, 0.1);
+  --purple: #b9a1fb;
+  --purple-soft: rgba(185, 161, 251, 0.11);
+  --pink: #ed9cca;
+  --pink-soft: rgba(237, 156, 202, 0.1);
+  --teal: #79d6b8;
+  --teal-soft: rgba(121, 214, 184, 0.1);
+  --orange: #eab882;
+  --orange-soft: rgba(234, 184, 130, 0.1);
+  --danger: #ff9cae;
+  --danger-soft: rgba(255, 116, 146, 0.1);
+  --warning: #efc389;
+  --warning-soft: rgba(239, 195, 137, 0.1);
+  --success: #89dfbb;
+  --success-soft: rgba(137, 223, 187, 0.1);
+  --chart-grid: rgba(177, 193, 231, 0.08);
+  --chart-1: #93e9ed;
+  --chart-2: #b9a1fb;
+  --chart-3: #ed9cca;
+  --chart-4: #eab882;
+  --chart-5: #809bff;
+  --chart-6: #79d6b8;
+  --bg-canvas-a: rgba(84, 70, 148, 0.1);
+  --bg-canvas-b: rgba(65, 121, 145, 0.08);
+  --bg-canvas-c: rgba(103, 65, 132, 0.07);
+  --shadow: 0 20px 60px -24px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 8px 24px -12px rgba(0, 0, 0, 0.3);
+  --shadow-hover:
+    0 24px 64px -24px rgba(0, 0, 0, 0.6), 0 0 24px -12px var(--accent-glow);
+  --card-border: var(--border);
+  --card-glow: inset 0 1px 0 rgba(255, 255, 255, 0.035), var(--shadow-sm);
+  --radius: 22px;
+  --radius-sm: 14px;
+  --radius-xs: 9px;
+  --sidebar-width: 248px;
+  --font:
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: var(--font);
+  --font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --primary-grad: linear-gradient(110deg, #abeff0, #8edbe3);
+  --primary-grad-soft: linear-gradient(
+    110deg,
+    rgba(147, 233, 237, 0.12),
+    rgba(147, 233, 237, 0.03)
+  );
+  --hero-grad:
+    radial-gradient(
+      ellipse at 95% 30%,
+      rgba(135, 115, 213, 0.17),
+      transparent 60%
+    ),
+    linear-gradient(125deg, #171d2b, #10131d);
+  --insight-grad:
+    radial-gradient(
+      ellipse at 95% 0%,
+      rgba(157, 114, 237, 0.17),
+      transparent 75%
+    ),
+    var(--surface);
+  --guidance-grad: linear-gradient(120deg, #202c38, #222238);
+  --ring-grad: linear-gradient(135deg, #93e9ed, #b9a1fb);
+  --waves: rgba(147, 233, 237, 0.08);
+  --glass-primary: rgba(20, 25, 38, 0.76);
+  --glass-secondary: rgba(19, 23, 35, 0.46);
+  --glass-floating: rgba(28, 33, 48, 0.9);
+  --glass-ultra: rgba(22, 27, 43, 0.65);
+  --blur: 18px;
+  --blur-ultra: 28px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --ease: cubic-bezier(0.22, 0.68, 0, 1);
+  --duration-fast: 160ms;
+  --duration: 280ms;
+  --duration-enter: 600ms;
+  --z-background: -1;
+  --z-header: 30;
+  --z-navigation: 40;
+  --z-toast: 100;
 }
-[data-theme=dark]{
-  color-scheme:dark;
-  --bg:#050a1c;
-  --bg-canvas-a:rgba(37,99,235,.2);
-  --bg-canvas-b:rgba(124,92,246,.16);
-  --bg-canvas-c:rgba(34,211,238,.1);
-  --surface:#0a1330;
-  --surface-2:#0e1938;
-  --surface-hover:#13204a;
-  --glass:rgba(10,19,48,.72);
-  --text:#dbe4fa;
-  --heading:#f2f6ff;
-  --muted:#93a5cc;
-  --dim:#64719a;
-  --border:rgba(110,150,255,.16);
-  --border-strong:rgba(110,150,255,.32);
-  --accent:#4d8bff;
-  --accent-strong:#6ba2ff;
-  --accent-ink:#04102e;
-  --accent-soft:rgba(77,139,255,.14);
-  --accent-line:rgba(77,139,255,.38);
-  --accent-glow:rgba(77,139,255,.3);
-  --blue:#4d8bff;
-  --blue-soft:rgba(77,139,255,.14);
-  --cyan:#2fd4f5;
-  --cyan-soft:rgba(47,212,245,.13);
-  --purple:#a78bfa;
-  --purple-soft:rgba(167,139,250,.15);
-  --pink:#f472b6;
-  --pink-soft:rgba(244,114,182,.14);
-  --teal:#2dd4bf;
-  --teal-soft:rgba(45,212,191,.13);
-  --orange:#fbbf24;
-  --orange-soft:rgba(251,191,36,.13);
-  --danger:#fb7185;
-  --danger-soft:rgba(251,113,133,.14);
-  --warning:#fbbf24;
-  --warning-soft:rgba(251,191,36,.13);
-  --success:#34d399;
-  --success-soft:rgba(52,211,153,.13);
-  --chart-grid:rgba(110,150,255,.12);
-  --chart-1:#4d8bff;
-  --chart-2:#2fd4f5;
-  --chart-3:#a78bfa;
-  --chart-4:#fbbf24;
-  --chart-5:#f472b6;
-  --chart-6:#2dd4bf;
-  --shadow:0 28px 70px -30px rgba(1,4,18,.85);
-  --shadow-sm:0 12px 30px -18px rgba(1,4,18,.75);
-  --shadow-hover:0 32px 80px -30px rgba(1,4,18,.9),0 0 24px -8px rgba(77,139,255,.25);
-  --primary-grad:linear-gradient(120deg,#3b7cf6 0%,#8b5cf6 100%);
-  --primary-grad-soft:linear-gradient(120deg,rgba(59,124,246,.2) 0%,rgba(139,92,246,.16) 100%);
-  --hero-grad:linear-gradient(118deg,rgba(37,99,235,.22) 0%,rgba(34,211,238,.1) 48%,rgba(139,92,246,.16) 100%),var(--surface);
-  --insight-grad:linear-gradient(150deg,rgba(139,92,246,.2) 0%,rgba(10,19,48,0) 70%),var(--surface);
-  --guidance-grad:linear-gradient(130deg,#2563eb 0%,#7c3aed 100%);
-  --ring-grad:linear-gradient(135deg,#4d8bff 0%,#2fd4f5 55%,#a78bfa 100%);
-  --waves:rgba(77,139,255,.14);
-  /* Luminous glass card treatment (reference #6) */
-  --card-border:rgba(110,150,255,.17);
-  --card-glow:0 0 0 1px rgba(77,139,255,.05),0 24px 60px -30px rgba(1,4,18,.85),inset 0 1px 0 rgba(140,170,255,.08);
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f1f3f8;
+  --surface: #ffffff;
+  --surface-2: #f4f6fa;
+  --surface-hover: #eaf0f5;
+  --glass: rgba(255, 255, 255, 0.8);
+  --text: #303c50;
+  --heading: #111b2d;
+  --muted: #52617a;
+  --dim: #647089;
+  --border: rgba(43, 62, 96, 0.1);
+  --border-strong: rgba(43, 62, 96, 0.22);
+  --accent: #166773;
+  --accent-strong: #166773;
+  --accent-ink: #fff;
+  --accent-soft: rgba(22, 103, 115, 0.07);
+  --accent-line: rgba(22, 103, 115, 0.23);
+  --accent-glow: rgba(22, 103, 115, 0.13);
+  --purple: #7050b9;
+  --purple-soft: rgba(112, 80, 185, 0.08);
+  --cyan: #166773;
+  --cyan-soft: rgba(22, 103, 115, 0.08);
+  --pink: #a44378;
+  --pink-soft: rgba(164, 67, 120, 0.08);
+  --blue: #4869bf;
+  --blue-soft: rgba(72, 105, 191, 0.09);
+  --teal: #147b63;
+  --teal-soft: rgba(20, 123, 99, 0.08);
+  --orange: #996027;
+  --orange-soft: rgba(153, 96, 39, 0.08);
+  --success: #147b63;
+  --success-soft: rgba(20, 123, 99, 0.08);
+  --danger: #ba3454;
+  --danger-soft: rgba(186, 52, 84, 0.07);
+  --warning: #956123;
+  --warning-soft: rgba(149, 97, 35, 0.08);
+  --chart-grid: rgba(43, 62, 96, 0.08);
+  --chart-1: #278995;
+  --chart-2: #8b68cb;
+  --chart-3: #b35a8b;
+  --chart-4: #b68644;
+  --chart-5: #6587cb;
+  --chart-6: #44a08c;
+  --bg-canvas-a: rgba(155, 144, 220, 0.09);
+  --bg-canvas-b: rgba(105, 178, 190, 0.09);
+  --bg-canvas-c: rgba(171, 136, 192, 0.06);
+  --shadow: 0 20px 60px -24px rgba(44, 60, 92, 0.14);
+  --shadow-sm: 0 8px 24px -12px rgba(44, 60, 92, 0.1);
+  --shadow-hover: 0 24px 64px -24px rgba(44, 60, 92, 0.22);
+  --primary-grad: linear-gradient(110deg, #1d7180, #225c70);
+  --primary-grad-soft: linear-gradient(
+    110deg,
+    rgba(22, 103, 115, 0.09),
+    rgba(22, 103, 115, 0.02)
+  );
+  --hero-grad:
+    radial-gradient(
+      ellipse at 95% 30%,
+      rgba(153, 129, 206, 0.15),
+      transparent 65%
+    ),
+    linear-gradient(125deg, #edf7f7, #f2f0f9);
+  --insight-grad: linear-gradient(135deg, #f0ebf8, #fff);
+  --guidance-grad: linear-gradient(120deg, #e3eef1, #e8e4f4);
+  --waves: rgba(22, 103, 115, 0.07);
+  --glass-primary: rgba(255, 255, 255, 0.8);
+  --glass-secondary: rgba(255, 255, 255, 0.5);
+  --glass-floating: rgba(255, 255, 255, 0.94);
+  --glass-ultra: rgba(248, 250, 255, 0.8);
 }

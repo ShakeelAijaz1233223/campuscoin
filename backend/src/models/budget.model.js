@@ -2,7 +2,10 @@ const db = require('../config/database');
 
 const BudgetModel = {
   async findById(id) {
-    return db.getOne('SELECT b.*, c.name as category_name, c.icon as category_icon, c.color as category_color FROM budgets b INNER JOIN categories c ON b.category_id = c.id WHERE b.id = ?', [id]);
+    return db.getOne(
+      'SELECT b.*, c.name as category_name, c.icon as category_icon, c.color as category_color FROM budgets b INNER JOIN categories c ON b.category_id = c.id WHERE b.id = ?',
+      [id]
+    );
   },
 
   async findByUser(userId, month, year) {
@@ -16,7 +19,10 @@ const BudgetModel = {
   },
 
   async findByUserAndCategory(userId, categoryId, month, year) {
-    return db.getOne('SELECT * FROM budgets WHERE user_id = ? AND category_id = ? AND month = ? AND year = ?', [userId, categoryId, month, year]);
+    return db.getOne(
+      'SELECT * FROM budgets WHERE user_id = ? AND category_id = ? AND month = ? AND year = ?',
+      [userId, categoryId, month, year]
+    );
   },
 
   async create(data) {
@@ -30,13 +36,30 @@ const BudgetModel = {
   async update(id, data) {
     const fields = [];
     const values = [];
-    for(const key of ['category_id','month','year']){if(data[key]!==undefined){fields.push(`${key} = ?`);values.push(data[key]);}}
-    if (data.amount !== undefined) { fields.push('amount = ?'); values.push(data.amount); }
-    if (data.spent !== undefined) { fields.push('spent = ?'); values.push(data.spent); }
-    if (data.status !== undefined) { fields.push('status = ?'); values.push(data.status); }
+    for (const key of ['category_id', 'month', 'year']) {
+      if (data[key] !== undefined) {
+        fields.push(`${key} = ?`);
+        values.push(data[key]);
+      }
+    }
+    if (data.amount !== undefined) {
+      fields.push('amount = ?');
+      values.push(data.amount);
+    }
+    if (data.spent !== undefined) {
+      fields.push('spent = ?');
+      values.push(data.spent);
+    }
+    if (data.status !== undefined) {
+      fields.push('status = ?');
+      values.push(data.status);
+    }
     if (fields.length === 0) return { affectedRows: 0 };
     values.push(id);
-    return db.update(`UPDATE budgets SET ${fields.join(', ')} WHERE id = ?`, values);
+    return db.update(
+      `UPDATE budgets SET ${fields.join(', ')} WHERE id = ?`,
+      values
+    );
   },
 
   async updateSpent(id, spent) {
@@ -44,11 +67,15 @@ const BudgetModel = {
   },
 
   async delete(id) {
-    return db.update("UPDATE budgets SET status = 'archived' WHERE id = ?", [id]);
+    return db.update("UPDATE budgets SET status = 'archived' WHERE id = ?", [
+      id
+    ]);
   },
 
   async isOwner(budgetId, userId) {
-    const b = await db.getOne('SELECT user_id FROM budgets WHERE id = ?', [budgetId]);
+    const b = await db.getOne('SELECT user_id FROM budgets WHERE id = ?', [
+      budgetId
+    ]);
     return b && b.user_id === userId;
   },
 
@@ -57,20 +84,17 @@ const BudgetModel = {
     const endOfMonth = new Date(year, month, 0);
     const endDate = `${year}-${String(month).padStart(2, '0')}-${String(endOfMonth.getDate()).padStart(2, '0')}`;
 
-    await db.update('UPDATE budgets SET spent = 0 WHERE user_id = ? AND month = ? AND year = ?', [userId,month,year]);
-    const results = await db.query(
-      `SELECT category_id, COALESCE(SUM(amount), 0) as total
-       FROM transactions WHERE user_id = ? AND type = 'expense' AND date >= ? AND date <= ? AND status = 'active'
-       GROUP BY category_id`,
-      [userId, startDate, endDate]
+    // One statement prevents readers observing a transient zero or partial totals.
+    const results = await db.update(
+      `UPDATE budgets b LEFT JOIN (
+        SELECT category_id, SUM(amount) AS total FROM transactions
+        WHERE user_id = ? AND type = 'expense' AND status = 'active' AND date BETWEEN ? AND ?
+        GROUP BY category_id
+      ) spending ON spending.category_id = b.category_id
+      SET b.spent = COALESCE(spending.total, 0)
+      WHERE b.user_id = ? AND b.month = ? AND b.year = ?`,
+      [userId, startDate, endDate, userId, month, year]
     );
-
-    for (const row of results) {
-      await db.update(
-        'UPDATE budgets SET spent = ? WHERE user_id = ? AND category_id = ? AND month = ? AND year = ?',
-        [row.total, userId, row.category_id, month, year]
-      );
-    }
 
     return results;
   },

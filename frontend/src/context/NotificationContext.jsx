@@ -1,2 +1,13 @@
-import {createContext,useContext,useEffect} from 'react';import useResource from '../hooks/useResource';import notificationApi from '../api/notificationApi';
-export const NotificationContext=createContext(null);export function NotificationProvider({children}){const state=useResource(notificationApi,{limit:10});useEffect(()=>{window.addEventListener('data-changed',state.refresh);return()=>window.removeEventListener('data-changed',state.refresh);},[state.refresh]);return <NotificationContext.Provider value={state}>{children}</NotificationContext.Provider>;}export const useNotificationContext=()=>useContext(NotificationContext);
+import { createContext, useContext } from 'react';
+import useResource from '../hooks/useResource';
+import notificationApi from '../api/notificationApi';
+export const NotificationContext = createContext(null);
+export function NotificationProvider({ children }) {
+  const state = useResource(notificationApi, { limit: 10 });
+  return (
+    <NotificationContext.Provider value={state}>
+      {children}
+    </NotificationContext.Provider>
+  );
+}
+export const useNotificationContext = () => useContext(NotificationContext);

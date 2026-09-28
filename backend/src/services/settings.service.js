@@ -2,7 +2,16 @@ const SettingModel = require('../models/setting.model');
 const ProfileModel = require('../models/profile.model');
 const db = require('../config/database');
 
-const ALLOWED_SETTINGS = ['currency', 'theme', 'language', 'date_format', 'notifications_enabled', 'email_notifications', 'weekly_report', 'default_account_id'];
+const ALLOWED_SETTINGS = [
+  'currency',
+  'theme',
+  'language',
+  'date_format',
+  'notifications_enabled',
+  'email_notifications',
+  'weekly_report',
+  'default_account_id'
+];
 
 const getSettings = async (userId) => {
   const profile = await ProfileModel.findByUserId(userId);
@@ -10,6 +19,9 @@ const getSettings = async (userId) => {
   const map = {};
   for (const s of settings) map[s.setting_key] = s.setting_value;
   return {
+    notifications_enabled: true,
+    email_notifications: false,
+    weekly_report: false,
     currency: profile?.currency || 'PKR',
     theme: profile?.theme || 'light',
     language: profile?.language || 'en',
@@ -26,9 +38,12 @@ const updateSettings = async (userId, data) => {
   if (data.currency !== undefined) profileFields.currency = data.currency;
   if (data.theme !== undefined) profileFields.theme = data.theme;
   if (data.language !== undefined) profileFields.language = data.language;
-  if (data.date_format !== undefined) profileFields.date_format = data.date_format;
-  if (data.monthly_allowance !== undefined) profileFields.monthly_allowance = data.monthly_allowance;
-  if (data.monthly_savings_goal !== undefined) profileFields.monthly_savings_goal = data.monthly_savings_goal;
+  if (data.date_format !== undefined)
+    profileFields.date_format = data.date_format;
+  if (data.monthly_allowance !== undefined)
+    profileFields.monthly_allowance = data.monthly_allowance;
+  if (data.monthly_savings_goal !== undefined)
+    profileFields.monthly_savings_goal = data.monthly_savings_goal;
 
   if (Object.keys(profileFields).length > 0) {
     await ProfileModel.update(userId, profileFields);

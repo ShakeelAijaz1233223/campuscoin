@@ -6,8 +6,16 @@ const validate = require('../middleware/validate');
 const { body, param } = require('express-validator');
 
 const createNoteValidator = [
-  body('title').trim().notEmpty().withMessage('Title is required').isLength({ max: 300 }),
-  body('content').trim().notEmpty().withMessage('Content is required'),
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage('Title is required')
+    .isLength({ max: 300 }),
+  body('content')
+    .trim()
+    .notEmpty()
+    .withMessage('Content is required')
+    .isLength({ max: 10000 }),
   body('color').optional({ values: 'falsy' }).isLength({ max: 20 }),
   body('is_pinned').optional().isBoolean()
 ];
@@ -15,13 +23,15 @@ const createNoteValidator = [
 const updateNoteValidator = [
   param('id').isInt({ min: 1 }).withMessage('Invalid note id'),
   body('title').optional().trim().notEmpty().isLength({ max: 300 }),
-  body('content').optional().trim().notEmpty(),
+  body('content').optional().trim().notEmpty().isLength({ max: 10000 }),
   body('color').optional({ values: 'falsy' }).isLength({ max: 20 }),
   body('is_pinned').optional().isBoolean(),
   body('status').optional().isIn(['active', 'archived'])
 ];
 
-const noteIdValidator = [param('id').isInt({ min: 1 }).withMessage('Invalid note id')];
+const noteIdValidator = [
+  param('id').isInt({ min: 1 }).withMessage('Invalid note id')
+];
 
 router.use(authenticate);
 router.get('/', noteController.getNotes);

@@ -6,19 +6,32 @@ const ActivityModel = require('../models/activity.model');
 const TransactionModel = require('../models/transaction.model');
 const ProfileModel = require('../models/profile.model');
 const db = require('../config/database');
-const { NotFoundError, BadRequestError, ForbiddenError } = require('../utils/errors');
+const {
+  NotFoundError,
+  BadRequestError,
+  ForbiddenError
+} = require('../utils/errors');
 const { round2 } = require('../helpers/statistics');
 
 // ---------- Admin dashboard & statistics ----------
 
 const getAdminDashboard = async () => {
-  const [userCount, activeCount, studentCount, adminCount, txCount, categoryCount] = await Promise.all([
+  const [
+    userCount,
+    activeCount,
+    studentCount,
+    adminCount,
+    txCount,
+    categoryCount
+  ] = await Promise.all([
     UserModel.count(),
     UserModel.countByStatus('active'),
     UserModel.countByRole('student'),
     UserModel.countByRole('admin'),
     TransactionModel.countAll(),
-    db.getOne("SELECT COUNT(*) as total FROM categories WHERE is_default = 1").then((r) => r.total)
+    db
+      .getOne('SELECT COUNT(*) as total FROM categories WHERE is_default = 1')
+      .then((r) => r.total)
   ]);
 
   const recentUsers = await db.query(
@@ -49,9 +62,14 @@ const getAdminDashboard = async () => {
 };
 
 const getStatistics = async () => {
-  const [userCount, txCount] = await Promise.all([UserModel.count(), TransactionModel.countAll()]);
+  const [userCount, txCount] = await Promise.all([
+    UserModel.count(),
+    TransactionModel.countAll()
+  ]);
 
-  const txByType = await db.query("SELECT type, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM transactions WHERE status = 'active' GROUP BY type");
+  const txByType = await db.query(
+    "SELECT type, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM transactions WHERE status = 'active' GROUP BY type"
+  );
 
   const topUsers = await db.query(
     `SELECT u.id, u.email, COUNT(t.id) as transaction_count, COALESCE(SUM(t.amount),0) as total_amount
@@ -66,7 +84,11 @@ const getStatistics = async () => {
   return {
     total_users: userCount,
     total_transactions: txCount,
-    transactions_by_type: txByType.map((r) => ({ type: r.type, count: r.count, total: round2(parseFloat(r.total)) })),
+    transactions_by_type: txByType.map((r) => ({
+      type: r.type,
+      count: r.count,
+      total: round2(parseFloat(r.total))
+    })),
     top_users_by_transactions: topUsers,
     monthly_signups: monthlySignups
   };
@@ -97,8 +119,17 @@ const getUserDetail = async (userId) => {
   const profile = await ProfileModel.findByUserId(userId);
   const stats = {
     transaction_count: await TransactionModel.count(userId),
-    account_count: (await db.getOne('SELECT COUNT(*) as c FROM accounts WHERE user_id = ?', [userId])).c,
-    goal_count: (await db.getOne("SELECT COUNT(*) as c FROM goals WHERE user_id = ? AND status != 'cancelled'", [userId])).c
+    account_count: (
+      await db.getOne('SELECT COUNT(*) as c FROM accounts WHERE user_id = ?', [
+        userId
+      ])
+    ).c,
+    goal_count: (
+      await db.getOne(
+        "SELECT COUNT(*) as c FROM goals WHERE user_id = ? AND status != 'cancelled'",
+        [userId]
+      )
+    ).c
   };
   return { user, profile, stats };
 };
@@ -110,17 +141,33 @@ const updateUserStatus = async (userId, status, adminId) => {
     throw new ForbiddenError('Admin accounts cannot be disabled');
   }
   await UserModel.setStatus(userId, status);
-  await ActivityModel.create(adminId, 'admin_action', 'user', userId, `Set user ${user.email} status to ${status}`);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'user',
+    userId,
+    `Set user ${user.email} status to ${status}`
+  );
   return UserModel.findById(userId);
 };
 
 const resetUserAccess = async (userId, adminId) => {
   const user = await UserModel.findById(userId);
   if (!user) throw new NotFoundError('User not found');
-  if (user.role === 'admin') throw new ForbiddenError('Cannot reset admin access');
-  await db.update('UPDATE users SET failed_login_attempts = 0, locked_until = NULL, status = ? WHERE id = ?', ['active', userId]);
+  if (user.role === 'admin')
+    throw new ForbiddenError('Cannot reset admin access');
+  await db.update(
+    'UPDATE users SET session_version = session_version + 1, failed_login_attempts = 0, locked_until = NULL, status = ? WHERE id = ?',
+    ['active', userId]
+  );
   await db.remove('DELETE FROM password_resets WHERE user_id = ?', [userId]);
-  await ActivityModel.create(adminId, 'admin_action', 'user', userId, `Reset access for user ${user.email}`);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'user',
+    userId,
+    `Reset access for user ${user.email}`
+  );
   return UserModel.findById(userId);
 };
 
@@ -138,33 +185,66 @@ const createDefaultCategory = async (adminId, data) => {
   if (duplicate) throw new BadRequestError('Default category already exists');
   const result = await db.insert(
     'INSERT INTO categories (user_id, name, type, icon, color, is_default, sort_order) VALUES (NULL, ?, ?, ?, ?, 1, ?)',
-    [data.name.trim(), data.type, data.icon || null, data.color || null, data.sort_order || 0]
+    [
+      data.name.trim(),
+      data.type,
+      data.icon || null,
+      data.color || null,
+      data.sort_order || 0
+    ]
   );
-  await ActivityModel.create(adminId, 'admin_action', 'category', result.insertId, `Created default category: ${data.name}`);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'category',
+    result.insertId,
+    `Created default category: ${data.name}`
+  );
   return CategoryModel.findById(result.insertId);
 };
 
 const updateDefaultCategory = async (adminId, categoryId, data) => {
   const category = await CategoryModel.findById(categoryId);
-  if (!category || category.is_default !== 1) throw new NotFoundError('Default category not found');
+  if (!category || category.is_default !== 1)
+    throw new NotFoundError('Default category not found');
   const fields = [];
   const values = [];
   for (const key of ['name', 'icon', 'color', 'sort_order', 'status']) {
-    if (data[key] !== undefined) { fields.push(`${key} = ?`); values.push(data[key]); }
+    if (data[key] !== undefined) {
+      fields.push(`${key} = ?`);
+      values.push(data[key]);
+    }
   }
-  if (fields.length === 0) throw new BadRequestError('No valid fields to update');
+  if (fields.length === 0)
+    throw new BadRequestError('No valid fields to update');
   values.push(categoryId);
-  await db.update(`UPDATE categories SET ${fields.join(', ')} WHERE id = ?`, values);
-  await ActivityModel.create(adminId, 'admin_action', 'category', categoryId, `Updated default category: ${category.name}`);
+  await db.update(
+    `UPDATE categories SET ${fields.join(', ')} WHERE id = ?`,
+    values
+  );
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'category',
+    categoryId,
+    `Updated default category: ${category.name}`
+  );
   return CategoryModel.findById(categoryId);
 };
 
 const deleteDefaultCategory = async (adminId, categoryId) => {
   const category = await CategoryModel.findById(categoryId);
-  if (!category || category.is_default !== 1) throw new NotFoundError('Default category not found');
+  if (!category || category.is_default !== 1)
+    throw new NotFoundError('Default category not found');
   const hasTransactions = await CategoryModel.hasTransactions(categoryId);
   await CategoryModel.delete(categoryId);
-  await ActivityModel.create(adminId, 'admin_action', 'category', categoryId, `Archived default category: ${category.name}`);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'category',
+    categoryId,
+    `Archived default category: ${category.name}`
+  );
   return { archived_due_to_history: hasTransactions };
 };
 
@@ -175,11 +255,16 @@ const getAnnouncements = async (filters) => {
 };
 
 const createAnnouncement = async (adminId, data, ip = null) => {
-  const result = await AnnouncementModel.create({ ...data, created_by: adminId });
+  const result = await AnnouncementModel.create({
+    ...data,
+    created_by: adminId
+  });
 
   // Push notification to all active users
   if (data.notify_users !== false) {
-    const users = await db.query("SELECT id FROM users WHERE status = 'active'");
+    const users = await db.query(
+      "SELECT id FROM users WHERE status = 'active'"
+    );
     for (const u of users) {
       await db.insert(
         'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)',
@@ -188,7 +273,15 @@ const createAnnouncement = async (adminId, data, ip = null) => {
     }
   }
 
-  await ActivityModel.create(adminId, 'admin_action', 'announcement', result.id, `Created announcement: ${data.title}`, null, ip);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'announcement',
+    result.id,
+    `Created announcement: ${data.title}`,
+    null,
+    ip
+  );
   return AnnouncementModel.findById(result.id);
 };
 
@@ -196,7 +289,15 @@ const updateAnnouncement = async (adminId, id, data, ip = null) => {
   const announcement = await AnnouncementModel.findById(id);
   if (!announcement) throw new NotFoundError('Announcement not found');
   await AnnouncementModel.update(id, data);
-  await ActivityModel.create(adminId, 'admin_action', 'announcement', id, `Updated announcement: ${announcement.title}`, null, ip);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'announcement',
+    id,
+    `Updated announcement: ${announcement.title}`,
+    null,
+    ip
+  );
   return AnnouncementModel.findById(id);
 };
 
@@ -204,19 +305,35 @@ const deleteAnnouncement = async (adminId, id, ip = null) => {
   const announcement = await AnnouncementModel.findById(id);
   if (!announcement) throw new NotFoundError('Announcement not found');
   await AnnouncementModel.delete(id);
-  await ActivityModel.create(adminId, 'admin_action', 'announcement', id, `Deleted announcement: ${announcement.title}`, null, ip);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'announcement',
+    id,
+    `Deleted announcement: ${announcement.title}`,
+    null,
+    ip
+  );
   return true;
 };
 
 // ---------- System tips management ----------
 
 const getSystemTips = async (filters) => {
-  return TipModel.findAll({...filters,includeInactive:true});
+  return TipModel.findAll({ ...filters, includeInactive: true });
 };
 
 const createSystemTip = async (adminId, data, ip = null) => {
   const result = await TipModel.create({ ...data, is_system: true });
-  await ActivityModel.create(adminId, 'admin_action', 'tip', result.id, `Created system tip: ${data.title}`, null, ip);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'tip',
+    result.id,
+    `Created system tip: ${data.title}`,
+    null,
+    ip
+  );
   return TipModel.findById(result.id);
 };
 
@@ -224,7 +341,15 @@ const updateSystemTip = async (adminId, id, data, ip = null) => {
   const tip = await TipModel.findById(id);
   if (!tip) throw new NotFoundError('Tip not found');
   await TipModel.update(id, data);
-  await ActivityModel.create(adminId, 'admin_action', 'tip', id, `Updated system tip: ${tip.title}`, null, ip);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'tip',
+    id,
+    `Updated system tip: ${tip.title}`,
+    null,
+    ip
+  );
   return TipModel.findById(id);
 };
 
@@ -232,14 +357,38 @@ const deleteSystemTip = async (adminId, id, ip = null) => {
   const tip = await TipModel.findById(id);
   if (!tip) throw new NotFoundError('Tip not found');
   await TipModel.delete(id);
-  await ActivityModel.create(adminId, 'admin_action', 'tip', id, `Deleted system tip: ${tip.title}`, null, ip);
+  await ActivityModel.create(
+    adminId,
+    'admin_action',
+    'tip',
+    id,
+    `Deleted system tip: ${tip.title}`,
+    null,
+    ip
+  );
   return true;
 };
 
 module.exports = {
-  getAdminDashboard, getStatistics, getActiveUsers, getMostUsedCategories, getTransactionCount,
-  getUsers, getUserDetail, updateUserStatus, resetUserAccess,
-  getDefaultCategoriesAdmin, createDefaultCategory, updateDefaultCategory, deleteDefaultCategory,
-  getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement,
-  getSystemTips, createSystemTip, updateSystemTip, deleteSystemTip
+  getAdminDashboard,
+  getStatistics,
+  getActiveUsers,
+  getMostUsedCategories,
+  getTransactionCount,
+  getUsers,
+  getUserDetail,
+  updateUserStatus,
+  resetUserAccess,
+  getDefaultCategoriesAdmin,
+  createDefaultCategory,
+  updateDefaultCategory,
+  deleteDefaultCategory,
+  getAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  getSystemTips,
+  createSystemTip,
+  updateSystemTip,
+  deleteSystemTip
 };

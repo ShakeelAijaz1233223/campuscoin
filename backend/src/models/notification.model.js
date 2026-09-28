@@ -5,35 +5,62 @@ const NotificationModel = {
     return db.getOne('SELECT * FROM notifications WHERE id = ?', [id]);
   },
 
-  async findByUser(userId, { is_read = '', type = '', page = 1, limit = 20 } = {}) {
+  async findByUser(
+    userId,
+    { is_read = '', type = '', page = 1, limit = 20 } = {}
+  ) {
     let where = ['user_id = ?'];
     let params = [userId];
-    if (is_read !== '') { where.push('is_read = ?'); params.push(parseInt(is_read)); }
-    if (type) { where.push('type = ?'); params.push(type); }
-    const countResult = await db.getOne(`SELECT COUNT(*) as total FROM notifications WHERE ${where.join(' AND ')}`, params);
+    if (is_read !== '') {
+      where.push('is_read = ?');
+      params.push(parseInt(is_read));
+    }
+    if (type) {
+      where.push('type = ?');
+      params.push(type);
+    }
+    const countResult = await db.getOne(
+      `SELECT COUNT(*) as total FROM notifications WHERE ${where.join(' AND ')}`,
+      params
+    );
     const offset = (page - 1) * limit;
-    const notifications = await db.query(`SELECT * FROM notifications WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`, [...params, limit, offset]);
+    const notifications = await db.query(
+      `SELECT * FROM notifications WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
     return { notifications, total: countResult.total };
   },
 
   async create(userId, type, title, message, data = null) {
     const result = await db.insert(
-      'INSERT INTO notifications (user_id, type, title, message, data) VALUES (?, ?, ?, ?, ?)',
-      [userId, type, title, message, data ? JSON.stringify(data) : null]
+      `INSERT INTO notifications (user_id, type, title, message, data)
+       SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (
+         SELECT 1 FROM settings WHERE user_id = ? AND setting_key = 'notifications_enabled' AND setting_value IN ('false', '0')
+       )`,
+      [userId, type, title, message, data ? JSON.stringify(data) : null, userId]
     );
     return { id: result.insertId };
   },
 
   async markRead(id) {
-    return db.update('UPDATE notifications SET is_read = 1, read_at = NOW() WHERE id = ?', [id]);
+    return db.update(
+      'UPDATE notifications SET is_read = 1, read_at = NOW() WHERE id = ?',
+      [id]
+    );
   },
 
   async markAllRead(userId) {
-    return db.update('UPDATE notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0', [userId]);
+    return db.update(
+      'UPDATE notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0',
+      [userId]
+    );
   },
 
   async getUnreadCount(userId) {
-    const result = await db.getOne('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0', [userId]);
+    const result = await db.getOne(
+      'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0',
+      [userId]
+    );
     return result.count;
   },
 
@@ -42,7 +69,10 @@ const NotificationModel = {
   },
 
   async isOwner(notificationId, userId) {
-    const n = await db.getOne('SELECT user_id FROM notifications WHERE id = ?', [notificationId]);
+    const n = await db.getOne(
+      'SELECT user_id FROM notifications WHERE id = ?',
+      [notificationId]
+    );
     return n && n.user_id === userId;
   }
 };

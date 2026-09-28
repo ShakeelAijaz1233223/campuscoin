@@ -64,7 +64,9 @@ An anonymous `/auth/me` returning **401 is expected**. Login sets an **HttpOnly
 JWT cookie** automatically sent by `credentials: include`; reload restores it.
 No JWT is placed in localStorage/sessionStorage. Separate API clients can use
 the returned token as `Authorization: Bearer <token>`. Browser logout clears its
-cookie and auth state; existing standalone Bearer tokens remain valid until expiry.
+cookie and auth state and revokes existing sessions (including Bearer tokens) via
+`users.session_version`. Password reset/change and administrator access changes
+also invalidate older sessions; password change rotates the current session.
 
 ## Connected features
 
@@ -118,18 +120,23 @@ use that mode for public deployments**. No lint script is defined.
 
 ### Frontend redesign and verification
 
-The frontend was redesigned around a light premium fintech design system while
-keeping the backend, database schema, API contracts and authentication flows
-untouched. See [docs/REDESIGN_NOTES.md](docs/REDESIGN_NOTES.md) for the design
-tokens, dashboard composition and illustration approach. Fresh verification
-screenshots and the connected Playwright run log live in
-[docs/verification/](docs/verification/).
+The **Nocturne** redesign is dark-first with a complete light theme: restrained
+cyan/violet glass, self-hosted variable typography, cinematic CSS illustration,
+responsive working pages and reduced-motion behavior. Focused backend/security
+fixes and an additive session migration support the connected experience; the
+working React/Express/MySQL architecture was retained.
 
-Latest audit: **127 backend tests, 11 frontend unit tests, 22 Playwright tests
-(15 real-backend flows + 7 isolated UI tests), production build**. MySQL 5.7.29
-was used as a local compatibility runtime; the optional MySQL 8.4 Compose service
-was not executed. See [the end-to-end audit](docs/END_TO_END_AUDIT.md) for scope,
-SQL verification, and remaining deployment dependencies.
+See [design notes](docs/REDESIGN_NOTES.md), the
+[A–W end-to-end audit](docs/END_TO_END_AUDIT.md), and
+[fresh screenshots and verification results](docs/verification/nocturne/).
+
+Latest verification (2026-09-28): **143 backend tests, 13 frontend unit tests,
+31 Playwright tests (24 connected + seven fixture-based), production build** —
+all passed. Both npm dependency audits reported zero known vulnerabilities.
+The student routes were checked at 320–1920px in both themes; public/admin routes
+were also checked on mobile, tablet and desktop. MySQL 5.7.29 was a disposable
+compatibility runtime, not a recommended production version; MySQL 8.4 Compose
+and external mail/hosting were not executed here.
 
 ## Production and external services
 
