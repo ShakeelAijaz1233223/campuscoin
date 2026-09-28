@@ -178,11 +178,13 @@ test('change password from the profile page and sign back in',async({page})=>{
  await page.getByLabel('Email address').fill(email);
  await page.getByLabel('Password',{exact:true}).fill('Rotated@12345');
  await page.getByRole('button',{name:'Sign in to your workspace'}).click();
- await expect(page).toHaveURL(/dashboard/);
+ await expect(page).not.toHaveURL(/login/);
+ await expect(page.getByLabel('Full name')).toBeVisible();
  await page.context().clearCookies();
  await page.goto('/login');
  await page.getByLabel('Email address').fill(email);
  await page.getByLabel('Password',{exact:true}).fill('ConnectedTest@123');
  await page.getByRole('button',{name:'Sign in to your workspace'}).click();
  await expect(page).toHaveURL(/login/);
+ await expect(page.getByRole('alert')).toContainText('Invalid email or password');
 });
