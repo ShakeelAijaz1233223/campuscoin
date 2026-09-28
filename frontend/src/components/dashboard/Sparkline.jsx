@@ -1,5 +1,5 @@
 import{useId}from'react';import{ResponsiveContainer,AreaChart,Area}from'recharts';
-export default function Sparkline({data=[],color='#12b981',id='spark'}){
+export default function Sparkline({data=[],color='#3b7cf6',id='spark'}){
  const cid=useId().replaceAll(':','')+id;
  const series=data.map((v,i)=>({i,v}));
  return <div className="sc-spark" aria-hidden="true"><ResponsiveContainer width="100%" height="100%">

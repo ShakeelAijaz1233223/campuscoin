@@ -1,1 +1,1 @@
-import {Link} from 'react-router-dom';export default function Footer(){return <footer className="footer"><span>© {new Date().getFullYear()} CampusCoin</span><span>Your money. Your momentum.</span><div><Link to="/help">Help center</Link><Link to="/sitemap">Sitemap</Link></div></footer>;}
+import {Link} from 'react-router-dom';export default function Footer(){return <footer className="footer"><span>© {new Date().getFullYear()} CampusCoin</span><span>Your money. Your Momentum.</span><div><Link to="/help">Help center</Link><Link to="/sitemap">Sitemap</Link></div></footer>;}

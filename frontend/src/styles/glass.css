@@ -6,6 +6,6 @@
 .modal h2{margin:0;font-size:1.2rem;letter-spacing:-.02em}
 .aurora-environment{position:fixed;inset:0;overflow:hidden;z-index:-1;pointer-events:none}
 .aurora{position:absolute;border-radius:50%;filter:blur(90px);opacity:.16;animation:aurora 26s ease-in-out infinite alternate}
-.aurora-one{width:620px;height:480px;background:radial-gradient(ellipse,rgba(34,195,221,.35),transparent 65%);top:0;right:-160px}
-.aurora-two{width:700px;height:500px;background:radial-gradient(ellipse,rgba(18,185,129,.3),transparent 70%);top:70%;left:0;opacity:.12;animation-delay:-12s}
+.aurora-one{width:620px;height:480px;background:radial-gradient(ellipse,rgba(59,124,246,.32),transparent 65%);top:0;right:-160px}
+.aurora-two{width:700px;height:500px;background:radial-gradient(ellipse,rgba(124,92,246,.3),transparent 70%);top:70%;left:0;opacity:.12;animation-delay:-12s}
 .ambient-grid{display:none}

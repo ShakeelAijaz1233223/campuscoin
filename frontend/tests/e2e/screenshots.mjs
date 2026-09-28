@@ -139,6 +139,19 @@ async function main() {
     }
   } catch (e) {console.error('admin shots failed: ' + e.message.split('\n')[0]);}
 
+  // Dark theme (reference #6): flip the persisted theme and capture key screens.
+  try {
+    await page.goto(BASE + '/dashboard');
+    await page.evaluate(() => localStorage.setItem('cc-theme', 'dark'));
+    await page.reload();
+    await settle(page);
+    await shot(page, '20-dashboard-dark');
+    await page.goto(BASE + '/admin');
+    await settle(page);
+    await shot(page, '21-admin-dark');
+    await page.evaluate(() => localStorage.setItem('cc-theme', 'light'));
+  } catch (e) {console.error('dark shots failed: ' + e.message.split('\n')[0]);}
+
   if (errors.length) {
     console.error('PAGE ERRORS:\n' + errors.join('\n'));
     process.exitCode = 2;

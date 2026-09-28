@@ -10,7 +10,7 @@ export default function BudgetCheckIn({summary,budgets=[],currency}){
  {summary&&summary.total_budget>0?<>
   <div className="budget-ring-wrap">
    <div className="budget-ring"><svg width="118" height="118" viewBox="0 0 118 118" aria-hidden="true">
-     <defs><linearGradient id="budgetRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#12b981"/><stop offset="100%" stopColor="#22c3dd"/></linearGradient></defs>
+     <defs><linearGradient id="budgetRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#3b7cf6"/><stop offset="55%" stopColor="#22c3dd"/><stop offset="100%" stopColor="#7c5cf6"/></linearGradient></defs>
      <circle className="ring-track" cx="59" cy="59" r={R} fill="none" strokeWidth="11"/>
      <circle className="ring-value" cx="59" cy="59" r={R} fill="none" stroke={stroke} strokeWidth="11" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C-(C*pct/100)}/>
     </svg><div className="ring-label"><b>{pct}%</b><small>used</small></div></div>

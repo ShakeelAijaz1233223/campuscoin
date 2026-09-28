@@ -4,10 +4,10 @@ export default function InsightCard({insight,month,year}){
  const generate=async()=>{setBusy(true);try{await insightApi.generate({month,year});notify('A fresh insight is ready.');}catch(e){notify(e.message,'error');}finally{setBusy(false);}};
  return <Card className="insight-card">
   <div className="row between"><span className="spark-icon"><Sparkles size={21}/></span><Badge tone="violet">AI Insight</Badge></div>
-  <h2>Your spending has a story.</h2>
+  <h2>A fresh perspective.</h2>
   {insight?.summary?<p>{insight.summary}{insight.tip?' '+insight.tip:''}</p>
-   :<p>No insight for this month yet. Generate one from your saved records — CampusCoin looks at your income, spending and budgets to write a short reflection.</p>}
-  <div className="row" style={{marginTop:16,gap:10}}>{insight?.summary?<Link className="text-button" to="/insights">Explore your insights <ArrowUpRight size={15}/></Link>:null}
+   :<p>Your spending has a story. Generate a monthly insight to discover yours.</p>}
+  <div className="insight-actions">{insight?.summary&&<Link className="button primary small" to="/insights">Explore your insights <ArrowUpRight size={15}/></Link>}
    <Button variant="secondary" onClick={generate} loading={busy} className="small">{insight?.summary?'Regenerate insight':'Generate this month’s insight'}</Button></div>
   <div className="insight-illust"><InsightIllustration/></div>
  </Card>;}

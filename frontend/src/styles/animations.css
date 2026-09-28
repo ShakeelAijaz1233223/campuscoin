@@ -22,6 +22,6 @@
 .magnetic-wrap{display:inline-block;transition:translate .3s}
 .parallax{transition:transform .5s ease-out;transform-style:preserve-3d}
 .particle-field,.liquid-mesh,.floating-lights{display:none}
-.ambient-glow{position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(ellipse,rgba(34,195,221,.08),transparent);right:0;bottom:0;pointer-events:none}
-.ambient-glow.violet{background:radial-gradient(ellipse,rgba(138,110,248,.1),transparent)}
+.ambient-glow{position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(ellipse,rgba(59,124,246,.09),transparent);right:0;bottom:0;pointer-events:none}
+.ambient-glow.violet{background:radial-gradient(ellipse,rgba(124,92,246,.12),transparent)}
 .cursor-halo{display:none}
