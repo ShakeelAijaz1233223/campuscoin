@@ -69,7 +69,7 @@ cookie and auth state; existing standalone Bearer tokens remain valid until expi
 ## Connected features
 
 - Registration, login, restored HttpOnly cookie session, logout, role guards,
-  password reset, profile and saved settings.
+  password reset, change password (Profile page), profile and saved settings.
 - Accounts, custom categories, transactions, filters and pagination; rule-based
   category suggestions and manual overrides.
 - Category budgets, monthly spending recalculation, goals/saved amounts, bills
@@ -115,6 +115,15 @@ the test DB/test code, never as application fallback data.
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an installed Chromium executable.
 `NODE_ENV=test` disables rate limits for repeated integration-test logins; **do not
 use that mode for public deployments**. No lint script is defined.
+
+### Frontend redesign and verification
+
+The frontend was redesigned around a light premium fintech design system while
+keeping the backend, database schema, API contracts and authentication flows
+untouched. See [docs/REDESIGN_NOTES.md](docs/REDESIGN_NOTES.md) for the design
+tokens, dashboard composition and illustration approach. Fresh verification
+screenshots and the connected Playwright run log live in
+[docs/verification/](docs/verification/).
 
 Latest audit: **127 backend tests, 11 frontend unit tests, 22 Playwright tests
 (15 real-backend flows + 7 isolated UI tests), production build**. MySQL 5.7.29

@@ -164,3 +164,25 @@ test('sign out clears stale UI state when the browser session is already gone',a
  await page.getByRole('button',{name:'Sign out',exact:true}).click();
  await expect(page).toHaveURL(/login/);
 });
+
+test('change password from the profile page and sign back in',async({page})=>{
+ const email=await session(page);
+ await page.goto('/profile');
+ await page.getByLabel('Current password',{exact:true}).fill('ConnectedTest@123');
+ await page.getByLabel('New password',{exact:true}).fill('Rotated@12345');
+ await page.getByLabel('Confirm new password').fill('Rotated@12345');
+ await page.getByRole('button',{name:'Change password'}).click();
+ await expect(page.getByText('Your password has been changed.')).toBeVisible();
+ await page.getByRole('button',{name:'Sign out',exact:true}).click();
+ await expect(page).toHaveURL(/login/);
+ await page.getByLabel('Email address').fill(email);
+ await page.getByLabel('Password',{exact:true}).fill('Rotated@12345');
+ await page.getByRole('button',{name:'Sign in to your workspace'}).click();
+ await expect(page).toHaveURL(/dashboard/);
+ await page.context().clearCookies();
+ await page.goto('/login');
+ await page.getByLabel('Email address').fill(email);
+ await page.getByLabel('Password',{exact:true}).fill('ConnectedTest@123');
+ await page.getByRole('button',{name:'Sign in to your workspace'}).click();
+ await expect(page).toHaveURL(/login/);
+});

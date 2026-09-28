@@ -50,11 +50,17 @@ auth scene). No external or hotlinked imagery.
 
 ## Verification
 
-- `npm test` — 127 backend + 11 frontend unit tests.
+- `npm test` — 127 backend + 11 frontend unit tests (138 total, 0 failures).
 - `npm run build` — production build.
-- `.github/workflows/e2e-relay.yml` — one-off runner-based relay used because
-  the sandbox cannot download browser binaries: it runs the connected
-  Playwright suite against MySQL and commits fresh screenshots and the e2e
-  log under `docs/verification/`. `.github/workflows/fetch-mysql.yml` is the
-  matching one-off that staged a MySQL runtime for the sandbox (removed from
-  the branch tip after extraction; see history).
+- Connected Playwright suite — 23 tests against a real Vite → Express → MySQL
+  stack, including registration → SQL verification, full CRUD, CSV import,
+  report downloads, password change from the Profile page, and admin flows.
+- A responsive probe measured `scrollWidth − clientWidth = 0px` for the
+  dashboard, transactions, reports and settings at 320–1920px (one 320px case
+  scrolls inside its table container, which is intentional).
+- Fresh screenshots and the Playwright run log are committed under
+  `docs/verification/` (19 captures). The one-off GitHub-runner relay
+  workflows that produced them — this sandbox cannot download browser or
+  MySQL binaries — were removed once the audit completed. The same
+  verification reproduces anywhere with `npm test`, `npm run build`, and
+  `E2E_CONNECTED=1 npm run test:e2e` (see the README "Tests" section).

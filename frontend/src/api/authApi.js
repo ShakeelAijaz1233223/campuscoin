@@ -6,6 +6,7 @@ export const authApi={
  register:body=>request('/auth/register',{method:'POST',body:payload('/auth/register',body)}),
  logout:()=>request('/auth/logout',{method:'POST'}),
  forgot:body=>request('/auth/forgot-password',{method:'POST',body}),
- reset:(token,body)=>request('/auth/reset-password',{method:'POST',body:{...body,token}})
+ reset:(token,body)=>request('/auth/reset-password',{method:'POST',body:{...body,token}}),
+ changePassword:({current,next})=>request('/auth/change-password',{method:'POST',body:{current_password:current,new_password:next}})
 };
 export default authApi;
