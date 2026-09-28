@@ -1,0 +1,55 @@
+320px /dashboard overflow=0px DIV.aurora.aurora-two right=702 | DIV.row.header-tools right=359 | A.icon-button right=359 | SPAN.hero-blob.a right=367
+320px /transactions overflow=0px DIV.aurora.aurora-one right=480 | DIV.aurora.aurora-two right=702 | DIV.row.header-tools right=359 | A.icon-button right=359
+320px /reports overflow=0px DIV.aurora.aurora-one right=480 | DIV.aurora.aurora-two right=702 | DIV.row.header-tools right=359 | A.icon-button right=359
+320px /settings overflow=40px DIV.row right=498 | BUTTON.icon-button right=398 | BUTTON.icon-button right=448 | BUTTON.icon-button right=498
+320px errors=[]
+375px /dashboard overflow=0px DIV.aurora.aurora-one right=535 | DIV.aurora.aurora-two right=702 | SPAN.hero-blob.a right=422
+375px /transactions overflow=0px DIV.aurora.aurora-one right=535 | DIV.aurora.aurora-two right=702 | DIV.row.header-tools right=380 | A.icon-button right=380
+375px /reports overflow=0px DIV.aurora.aurora-one right=535 | DIV.aurora.aurora-two right=702
+375px /settings overflow=0px DIV.row right=498 | BUTTON.icon-button right=398 | BUTTON.icon-button right=448 | BUTTON.icon-button right=498
+375px errors=[]
+390px /dashboard overflow=0px DIV.aurora.aurora-one right=550 | DIV.aurora.aurora-two right=702 | SPAN.hero-blob.a right=437
+390px /transactions overflow=0px DIV.aurora.aurora-one right=550 | DIV.aurora.aurora-two right=702
+390px /reports overflow=0px DIV.aurora.aurora-one right=550 | DIV.aurora.aurora-two right=702
+390px /settings overflow=0px DIV.row right=498 | BUTTON.icon-button right=398 | BUTTON.icon-button right=448 | BUTTON.icon-button right=498
+390px errors=[]
+414px /dashboard overflow=0px DIV.aurora.aurora-one right=574 | DIV.aurora.aurora-two right=702 | SPAN.hero-blob.a right=461
+414px /transactions overflow=0px DIV.aurora.aurora-one right=574 | DIV.aurora.aurora-two right=702
+414px /reports overflow=0px DIV.aurora.aurora-one right=574 | DIV.aurora.aurora-two right=702
+414px /settings overflow=0px TD. right=511 | DIV.row right=498 | BUTTON.icon-button right=448 | BUTTON.icon-button right=498
+414px errors=[]
+480px /dashboard overflow=0px DIV.aurora.aurora-one right=640 | DIV.aurora.aurora-two right=702 | SPAN.hero-blob.a right=527
+480px /transactions overflow=0px DIV.aurora.aurora-one right=640 | DIV.aurora.aurora-two right=702
+480px /reports overflow=0px DIV.aurora.aurora-one right=640 | DIV.aurora.aurora-two right=702
+480px /settings overflow=0px TR. right=511 | TD. right=511 | DIV.row right=498 | BUTTON.icon-button right=498
+480px errors=[]
+768px /dashboard overflow=0px DIV.aurora.aurora-one right=928 | SPAN.hero-blob.a right=803
+768px /transactions overflow=0px DIV.aurora.aurora-one right=928
+768px /reports overflow=0px DIV.aurora.aurora-one right=928
+768px /settings overflow=0px TH. right=776 | TBODY. right=776 | TR. right=776 | TD. right=776
+768px errors=[]
+820px /dashboard overflow=0px DIV.aurora.aurora-one right=980 | SPAN.hero-blob.a right=855
+820px /transactions overflow=0px DIV.aurora.aurora-one right=980
+820px /reports overflow=0px DIV.aurora.aurora-one right=980
+820px /settings overflow=0px DIV.aurora.aurora-one right=980
+820px errors=[]
+1024px /dashboard overflow=0px DIV.aurora.aurora-one right=1184 | SPAN.hero-blob.a right=1059
+1024px /transactions overflow=0px DIV.aurora.aurora-one right=1184
+1024px /reports overflow=0px DIV.aurora.aurora-one right=1184
+1024px /settings overflow=0px DIV.aurora.aurora-one right=1184
+1024px errors=[]
+1280px /dashboard overflow=0px DIV.aurora.aurora-one right=1440
+1280px /transactions overflow=0px DIV.aurora.aurora-one right=1440
+1280px /reports overflow=0px DIV.aurora.aurora-one right=1440
+1280px /settings overflow=0px DIV.aurora.aurora-one right=1440
+1280px errors=[]
+1440px /dashboard overflow=0px DIV.aurora.aurora-one right=1600
+1440px /transactions overflow=0px DIV.aurora.aurora-one right=1600
+1440px /reports overflow=0px DIV.aurora.aurora-one right=1600
+1440px /settings overflow=0px DIV.aurora.aurora-one right=1600
+1440px errors=[]
+1920px /dashboard overflow=0px DIV.aurora.aurora-one right=2080
+1920px /transactions overflow=0px DIV.aurora.aurora-one right=2080
+1920px /reports overflow=0px DIV.aurora.aurora-one right=2080
+1920px /settings overflow=0px DIV.aurora.aurora-one right=2080
+1920px errors=[]
