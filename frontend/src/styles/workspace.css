@@ -47,7 +47,7 @@
 .hero-stat b{color:var(--heading);font-weight:700;font-size:.78rem;letter-spacing:-.01em}
 .hero-stat svg{color:var(--accent-strong)}
 [data-theme=dark] .hero-stat svg{color:var(--accent)}
-.hero-cta{margin:2px 0 14px}
+.hero-cta{margin:2px 0 14px;align-self:flex-start}
 .hero-illust{position:absolute;right:-14px;bottom:-8px;width:min(46%,330px);pointer-events:none}
 .hero-illust svg{width:100%;height:auto;display:block}
 .hero-blob{position:absolute;border-radius:50%;filter:blur(46px);pointer-events:none}
