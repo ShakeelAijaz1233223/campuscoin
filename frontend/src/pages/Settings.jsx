@@ -1,4 +1,145 @@
-import {useState} from 'react';import {Moon,Type,Monitor,ShieldCheck} from 'lucide-react';import {useTheme} from '../context/ThemeContext';import {useApp} from '../context/AppContext';import useResource from '../hooks/useResource';import settingsApi from '../api/settingsApi';import accountApi from '../api/accountApi';import PageContainer from '../components/layout/PageContainer';import {Card,Select,Input,Button,Checkbox,Loading,ErrorState} from '../components/common/UI';import EntityWorkspace from '../components/common/EntityWorkspace';import {f} from '../components/common/entityConfig';
-const accounts={api:accountApi,title:'Accounts',singular:'account',description:'Manage the accounts you track.',fields:[f('name','Account name','text',{required:true,maxLength:100}),f('type','Account type','select',{options:['cash','bank','wallet','savings','credit','other'],required:true}),f('openingBalance','Balance','number',{required:true,step:.01,default:0}),f('currency','Currency','select',{options:['PKR','USD','EUR','GBP','INR','AED'],required:true})],columns:['name','type','currency','balance']};
-function Preferences({data,refresh}){const [values,setValues]=useState({...data}),[busy,setBusy]=useState(false);const {notify}=useApp();return <form onSubmit={async e=>{e.preventDefault();setBusy(true);try{await settingsApi.save(values);notify('Preferences saved.');refresh();}catch(e){notify(e.message,'error');}finally{setBusy(false);}}}><h3>Keep me in the loop</h3>{[['notificationsEnabled','In-app notifications'],['weeklyReport','Weekly report preference'],['emailNotifications','Email notification preference']].map(([k,label])=><Checkbox key={k} label={label} checked={!!values[k]} onChange={e=>setValues(v=>({...v,[k]:e.target.checked}))}/>)}<Button loading={busy} type="submit">Save preferences</Button></form>;}
-export default function Settings(){const {theme,setTheme,fontSize,setFontSize}=useTheme(),s=useResource(settingsApi);return <PageContainer eyebrow="MAKE YOURSELF AT HOME" title="Your workspace, your way." description="Small adjustments for a more comfortable experience."><div className="two-grid"><Card><span className="feature-icon"><Monitor size={22}/></span><h2>Look & feel</h2><p className="muted">Appearance preferences are saved on this device. Reduced motion follows your operating system setting.</p><Select label="Color theme" value={theme} onChange={e=>setTheme(e.target.value)}><option value="dark">Dark — after hours</option><option value="light">Light — a fresh morning</option></Select><Select label="Reading size" value={fontSize} onChange={e=>setFontSize(Number(e.target.value))}><option value={16}>Standard · 100%</option><option value={18}>Comfortable · 112.5%</option><option value={20}>Large · 125%</option></Select><p className="reading-sample">A little more clarity. A lot more possibility.</p></Card><Card><span className="feature-icon"><ShieldCheck size={22}/></span><h2>Notifications</h2>{s.loading?<Loading/>:s.error?<ErrorState error={s.error} onRetry={s.refresh}/>:<Preferences data={s.data} refresh={s.refresh}/>}</Card></div><div className="section-gap"><EntityWorkspace kind="accounts" config={accounts} embedded/></div></PageContainer>;}
+import { useState } from 'react';
+import { Moon, Type, Monitor, ShieldCheck } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useApp } from '../context/AppContext';
+import useResource from '../hooks/useResource';
+import settingsApi from '../api/settingsApi';
+import accountApi from '../api/accountApi';
+import PageContainer from '../components/layout/PageContainer';
+import {
+  Card,
+  Select,
+  Input,
+  Button,
+  Checkbox,
+  Loading,
+  ErrorState
+} from '../components/common/UI';
+import EntityWorkspace from '../components/common/EntityWorkspace';
+import { f } from '../components/common/entityConfig';
+const accounts = {
+  api: accountApi,
+  title: 'Accounts',
+  singular: 'account',
+  description: 'Manage the accounts you track.',
+  fields: [
+    f('name', 'Account name', 'text', { required: true, maxLength: 100 }),
+    f('type', 'Account type', 'select', {
+      options: ['cash', 'bank', 'wallet', 'savings', 'credit', 'other'],
+      required: true
+    }),
+    f('openingBalance', 'Balance', 'number', {
+      required: true,
+      step: 0.01,
+      default: 0
+    }),
+    f('currency', 'Currency', 'select', {
+      options: ['PKR', 'USD', 'EUR', 'GBP', 'INR', 'AED'],
+      required: true
+    })
+  ],
+  columns: ['name', 'type', 'currency', 'balance']
+};
+function Preferences({ data, refresh }) {
+  const [values, setValues] = useState({ ...data }),
+    [busy, setBusy] = useState(false);
+  const { notify } = useApp();
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        try {
+          await settingsApi.save(values);
+          notify('Preferences saved.');
+          refresh();
+        } catch (e) {
+          notify(e.message, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <h3>Keep me in the loop</h3>
+      <p className="muted small-text">
+        Email preferences are saved for your deployment. Weekly email delivery
+        is not currently automated.
+      </p>
+      {[
+        ['notificationsEnabled', 'In-app notifications'],
+        ['weeklyReport', 'Weekly report preference'],
+        ['emailNotifications', 'Email notification preference']
+      ].map(([k, label]) => (
+        <Checkbox
+          key={k}
+          label={label}
+          checked={!!values[k]}
+          onChange={(e) => setValues((v) => ({ ...v, [k]: e.target.checked }))}
+        />
+      ))}
+      <Button loading={busy} type="submit">
+        Save preferences
+      </Button>
+    </form>
+  );
+}
+export default function Settings() {
+  const { theme, setTheme, fontSize, setFontSize } = useTheme(),
+    s = useResource(settingsApi);
+  return (
+    <PageContainer
+      eyebrow="MAKE YOURSELF AT HOME"
+      title="Your workspace, your way."
+      description="Small adjustments for a more comfortable experience."
+    >
+      <div className="two-grid">
+        <Card>
+          <span className="feature-icon">
+            <Monitor size={22} />
+          </span>
+          <h2>Look & feel</h2>
+          <p className="muted">
+            Appearance preferences are saved on this device. Reduced motion
+            follows your operating system setting.
+          </p>
+          <Select
+            label="Color theme"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+          >
+            <option value="dark">Dark — after hours</option>
+            <option value="light">Light — a fresh morning</option>
+          </Select>
+          <Select
+            label="Reading size"
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
+          >
+            <option value={16}>Standard · 100%</option>
+            <option value={18}>Comfortable · 112.5%</option>
+            <option value={20}>Large · 125%</option>
+          </Select>
+          <p className="reading-sample">
+            A little more clarity. A lot more possibility.
+          </p>
+        </Card>
+        <Card>
+          <span className="feature-icon">
+            <ShieldCheck size={22} />
+          </span>
+          <h2>Notifications</h2>
+          {s.loading ? (
+            <Loading />
+          ) : s.error ? (
+            <ErrorState error={s.error} onRetry={s.refresh} />
+          ) : (
+            <Preferences data={s.data} refresh={s.refresh} />
+          )}
+        </Card>
+      </div>
+      <div className="section-gap">
+        <EntityWorkspace kind="accounts" config={accounts} embedded />
+      </div>
+    </PageContainer>
+  );
+}

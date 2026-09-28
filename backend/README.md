@@ -2,7 +2,7 @@
 
 # CampusCoin Backend
 
-Production-ready REST API for **CampusCoin** — a student finance management platform.
+Connected REST API for **CampusCoin** — a student finance management platform.
 Built with **Node.js + Express.js + MySQL + JavaScript** following a strict layered architecture:
 
 ```text
@@ -164,7 +164,8 @@ Types accept `income/expense`, `credit/debit`, `in/out`. Dates accept `YYYY-MM-D
 ## 9. AI Service (optional by design)
 
 - `AI_PROVIDER=none` → built-in keyword engine (works offline, no key needed).
-- `AI_PROVIDER=openai` + `AI_API_KEY` → external provider with automatic fallback to the keyword engine if the API fails.
+- External providers are not implemented. Any other `AI_PROVIDER` warns and uses
+  the local engine; `AI_API_KEY` is reserved and not sent to an external service.
 - **AI never blocks anything**: transactions can always be created manually; the AI output is advisory only and marked as such.
 - The engine **learns from corrections**: `/ai/corrections` records user overrides; future suggestions for similar descriptions prefer the user's corrected category (confidence 0.99).
 
@@ -178,13 +179,13 @@ The server runs an in-process scheduler (hourly + shortly after boot):
 ## 11. Security
 
 - Helmet security headers, CORS allow-list, global + auth + upload rate limiting.
-- bcrypt password hashing (12 rounds), JWT bearer auth, account lockout after 5 failed logins (30 min).
+- bcrypt password hashing (12 rounds), versioned JWT/cookie auth with logout/password/admin revocation, account lockout after 5 failed logins (30 min).
 - Parameterized SQL everywhere (mysql2 prepared statements) — SQL-injection safe.
-- Input validation on every route (express-validator) + XSS-input sanitization middleware.
+- Route/domain input validation (express-validator and services) + input sanitization; React escapes displayed text.
 - Per-resource ownership checks; role authorization (`admin`) on every admin route.
 - Upload validation: CSV extension/MIME filter, 5 MB cap.
 - Password hashes are never returned; registration/login return a JWT for API clients; path-traversal-safe downloads; audit logging via `activities`.
-- Password reset: hashed tokens, single use, expiry, all outstanding reset tokens invalidated after use; concurrent reuse is rejected. Token is returned only outside production for testability.
+- Password reset: hashed tokens, single use, expiry, all outstanding reset tokens and access sessions invalidated after use; concurrent reuse is rejected. Token is returned only outside production for testability.
 
 ## 12. Testing
 
@@ -193,7 +194,7 @@ DB_NAME=campuscoin_test npm run migrate
 npm test        # defaults to the disposable campuscoin_test database
 ```
 
-127 backend tests: auth (register/login/logout/forgot/reset/suspended/admin), profile, categories, transactions (CRUD, filters, duplicates, AI, ownership), recurring (generation + idempotency), budgets (spent/remaining/alerts/exceeded), goals (milestones/completion), bills (overdue/upcoming/pay), reports (monthly/range/PDF magic-bytes/leak-check), CSV import (full pipeline, errors, duplicates, ownership), insights/tips/bookmarks/notes, admin (users, categories, announcements, tips, statistics), security (invalid/expired/forged tokens, SQL injection, XSS, cross-user access, role escalation).
+143 backend tests: auth (register/login/logout/forgot/reset/suspended/admin), profile, categories, transactions (CRUD, filters, duplicates, AI, ownership), recurring (generation + idempotency), budgets (spent/remaining/alerts/exceeded), goals (milestones/completion), bills (overdue/upcoming/pay), reports (monthly/range/PDF magic-bytes/leak-check), CSV import (full pipeline, errors, duplicates, ownership), insights/tips/bookmarks/notes, admin (users, categories, announcements, tips, statistics), security (invalid/expired/forged tokens, SQL injection, XSS, cross-user access, role escalation).
 
 Tests run with `NODE_ENV=test` (rate limiting no-oped, fast bcrypt rounds) and spin up the app on an ephemeral port.
 
@@ -203,6 +204,8 @@ Tests run with `NODE_ENV=test` (rate limiting no-oped, fast bcrypt rounds) and s
 - Errors are masked in production (no stack traces / internals leaked).
 - Export/report files auto-delete after 30 minutes; `uploads/` files are removed after import completes.
 - Consider running behind nginx with TLS; the app binds `0.0.0.0`.
+- Apply `npm run migrate` before serving the new version: `users.session_version` is additive and repeatable.
+- Weekly/email preferences are saved, but no weekly email delivery job exists.
 - DB pool: 20 connections (tune in `src/config/database.js`).
 
 ## 14. Troubleshooting

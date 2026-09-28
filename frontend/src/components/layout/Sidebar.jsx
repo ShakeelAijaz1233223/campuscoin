@@ -1,3 +1,166 @@
-import{useState}from'react';import{NavLink,Link}from'react-router-dom';import{LogOut,ArrowUpRight,ChevronDown,X,Compass}from'lucide-react';import Brand from './Brand';import {navigation,adminNavigation} from './navigation';import useAuth from '../../hooks/useAuth';import {Avatar,IconButton} from '../common/UI';import {useApp} from '../../context/AppContext';
-export default function Sidebar({open,onClose}){const {user,logout}=useAuth();const {notify}=useApp();const [wsOpen,setWsOpen]=useState(false);const admin=user?.role==='admin';const items=admin?[...navigation,...adminNavigation]:navigation;const groups=[];items.forEach(n=>{const g=n.group||groups[groups.length-1]?.label;if(!groups.length||groups[groups.length-1].label!==g)groups.push({label:g,items:[n]});else groups[groups.length-1].items.push(n);});
-return <><button className={'sidebar-scrim '+(open?'visible':'')} onClick={onClose} aria-label="Close navigation" tabIndex={open?0:-1}/><aside className={'sidebar '+(open?'open':'')}><div className="sidebar-brand"><Brand/><span className="mobile-only"><IconButton label="Close navigation" onClick={onClose}><X size={20}/></IconButton></span></div><div className="workspace-select" onClick={()=>setWsOpen(v=>!v)} role="button" tabIndex={0} aria-expanded={wsOpen} aria-label="Workspace selector" onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setWsOpen(v=>!v);}}}><span className="avatar" style={{width:32,height:32,borderRadius:10,fontSize:'.6rem'}} aria-hidden="true">{admin?'A':'S'}</span><span className="ws-text"><span className="ws-label">{admin?'Admin workspace':'Student workspace'}</span><span className="ws-value">{admin?'Administration':'Personal finance'}</span></span><ChevronDown size={16} style={{transform:wsOpen?'rotate(180deg)':'none',transition:'transform .2s'}}/></div>{wsOpen&&<div className="ws-menu card" role="menu"><small className="muted">{admin?'You are overseeing platform administration.':'You are tracking your personal campus finances.'}</small>{admin&&<Link className="text-button" to="/admin">Open admin area</Link>}</div>}<nav aria-label="Main navigation">{groups.map(g=><div key={g.label}><p className="nav-label">{g.label}</p>{g.items.map(n=><NavLink key={n.path} to={n.path} end onClick={onClose} className={({isActive})=>isActive?'nav-link active':'nav-link'}><n.icon size={18}/><span>{n.label}</span>{n.badge&&<em>{n.badge}</em>}</NavLink>)}</div>)}</nav><div className="sidebar-bottom"><Link to="/help" className="guidance-card" onClick={onClose}><span className="mini-icon" style={{background:'rgba(255,255,255,.16)',borderColor:'transparent',color:'#fff'}}><Compass size={19}/></span><span className="gc-text">A little guidance?<small>Make the most of CampusCoin</small></span><ArrowUpRight size={17} className="guidance-arrow"/></Link><div className="profile-tile"><Avatar name={user?.name}/><div><b>{user?.name}</b><small>{admin?'Administrator':'Student Account'}</small></div><IconButton label="Sign out" onClick={async()=>{try{await logout();}catch(e){notify(e.message,'error');}}}><LogOut size={17}/></IconButton></div></div></aside></>;}
+import { useState } from 'react';
+import useMobileNavigation from '../../hooks/useMobileNavigation';
+import { NavLink, Link } from 'react-router-dom';
+import { LogOut, ArrowUpRight, ChevronDown, X, Compass } from 'lucide-react';
+import Brand from './Brand';
+import { navigation, adminNavigation } from './navigation';
+import useAuth from '../../hooks/useAuth';
+import { Avatar, IconButton } from '../common/UI';
+import { useApp } from '../../context/AppContext';
+export default function Sidebar({ open, onClose }) {
+  const { ref, mobile } = useMobileNavigation(open, onClose);
+  const { user, logout } = useAuth();
+  const { notify } = useApp();
+  const [wsOpen, setWsOpen] = useState(false);
+  const admin = user?.role === 'admin';
+  const items = admin ? [...navigation, ...adminNavigation] : navigation;
+  const groups = [];
+  items.forEach((n) => {
+    const g = n.group || groups[groups.length - 1]?.label;
+    if (!groups.length || groups[groups.length - 1].label !== g)
+      groups.push({ label: g, items: [n] });
+    else groups[groups.length - 1].items.push(n);
+  });
+  return (
+    <>
+      <button
+        className={'sidebar-scrim ' + (open ? 'visible' : '')}
+        onClick={onClose}
+        aria-label="Close navigation"
+        tabIndex={open ? 0 : -1}
+      />
+      <aside
+        ref={ref}
+        inert={mobile && !open}
+        role={mobile && open ? 'dialog' : undefined}
+        aria-modal={mobile && open ? true : undefined}
+        aria-label="Workspace navigation"
+        className={'sidebar ' + (open ? 'open' : '')}
+      >
+        <div className="sidebar-brand">
+          <Brand />
+          <span className="mobile-only">
+            <IconButton label="Close navigation" onClick={onClose}>
+              <X size={20} />
+            </IconButton>
+          </span>
+        </div>
+        <div
+          className="workspace-select"
+          onClick={() => setWsOpen((v) => !v)}
+          role="button"
+          tabIndex={0}
+          aria-expanded={wsOpen}
+          aria-label="Workspace selector"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setWsOpen((v) => !v);
+            }
+          }}
+        >
+          <span
+            className="avatar"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 10,
+              fontSize: '.6rem'
+            }}
+            aria-hidden="true"
+          >
+            {admin ? 'A' : 'S'}
+          </span>
+          <span className="ws-text">
+            <span className="ws-label">
+              {admin ? 'Admin workspace' : 'Student workspace'}
+            </span>
+            <span className="ws-value">
+              {admin ? 'Administration' : 'Personal finance'}
+            </span>
+          </span>
+          <ChevronDown
+            size={16}
+            style={{
+              transform: wsOpen ? 'rotate(180deg)' : 'none',
+              transition: 'transform .2s'
+            }}
+          />
+        </div>
+        {wsOpen && (
+          <div className="ws-menu card" role="menu">
+            <small className="muted">
+              {admin
+                ? 'You are overseeing platform administration.'
+                : 'You are tracking your personal campus finances.'}
+            </small>
+            {admin && (
+              <Link className="text-button" to="/admin">
+                Open admin area
+              </Link>
+            )}
+          </div>
+        )}
+        <nav aria-label="Main navigation">
+          {groups.map((g) => (
+            <div key={g.label}>
+              <p className="nav-label">{g.label}</p>
+              {g.items.map((n) => (
+                <NavLink
+                  key={n.path}
+                  to={n.path}
+                  end
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    isActive ? 'nav-link active' : 'nav-link'
+                  }
+                >
+                  <n.icon size={18} />
+                  <span>{n.label}</span>
+                  {n.badge && <em>{n.badge}</em>}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-bottom">
+          <Link to="/help" className="guidance-card" onClick={onClose}>
+            <span
+              className="mini-icon"
+              style={{
+                background: 'rgba(255,255,255,.16)',
+                borderColor: 'transparent',
+                color: '#fff'
+              }}
+            >
+              <Compass size={19} />
+            </span>
+            <span className="gc-text">
+              A little guidance?<small>Make the most of CampusCoin</small>
+            </span>
+            <ArrowUpRight size={17} className="guidance-arrow" />
+          </Link>
+          <div className="profile-tile">
+            <Avatar name={user?.name} />
+            <div>
+              <b>{user?.name}</b>
+              <small>{admin ? 'Administrator' : 'Student Account'}</small>
+            </div>
+            <IconButton
+              label="Sign out"
+              onClick={async () => {
+                try {
+                  await logout();
+                } catch (e) {
+                  notify(e.message, 'error');
+                }
+              }}
+            >
+              <LogOut size={17} />
+            </IconButton>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}

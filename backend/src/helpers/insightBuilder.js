@@ -6,9 +6,13 @@ const { round2, percentageChange, savingsRate } = require('./statistics');
  */
 const buildInsight = (data) => {
   const {
-    month, year,
-    totalIncome, totalExpense,
-    previousIncome, previousExpense,
+    month,
+    year,
+    currency = 'PKR',
+    totalIncome,
+    totalExpense,
+    previousIncome,
+    previousExpense,
     topCategories = [],
     categoryGrowth = [],
     budgetStatus = [],
@@ -23,58 +27,106 @@ const buildInsight = (data) => {
   const incomeChange = percentageChange(totalIncome, previousIncome);
 
   const parts = [];
-  parts.push(`In ${getMonthName(month)} ${year}, you recorded ${transactionCount} transaction${transactionCount === 1 ? '' : 's'} with PKR ${formatNum(totalIncome)} income and PKR ${formatNum(totalExpense)} expenses, saving PKR ${formatNum(savings)} (${rate}% savings rate).`);
+  parts.push(
+    `In ${getMonthName(month)} ${year}, you recorded ${transactionCount} transaction${transactionCount === 1 ? '' : 's'} with ${currency} ${formatNum(totalIncome)} income and ${currency} ${formatNum(totalExpense)} expenses, saving ${currency} ${formatNum(savings)} (${rate}% savings rate).`
+  );
 
   if (previousExpense > 0) {
-    if (expenseChange > 10) parts.push(`Your spending increased by ${Math.abs(round2(expenseChange))}% compared to last month — worth reviewing your largest categories.`);
-    else if (expenseChange < -10) parts.push(`Great progress! Your spending decreased by ${Math.abs(round2(expenseChange))}% compared to last month.`);
-    else parts.push(`Your spending was relatively stable compared to last month.`);
+    if (expenseChange > 10)
+      parts.push(
+        `Your spending increased by ${Math.abs(round2(expenseChange))}% compared to last month — worth reviewing your largest categories.`
+      );
+    else if (expenseChange < -10)
+      parts.push(
+        `Great progress! Your spending decreased by ${Math.abs(round2(expenseChange))}% compared to last month.`
+      );
+    else
+      parts.push(`Your spending was relatively stable compared to last month.`);
   }
   if (previousIncome > 0 && Math.abs(incomeChange) > 10) {
-    parts.push(`Income ${incomeChange > 0 ? 'grew' : 'dropped'} by ${Math.abs(round2(incomeChange))}% versus last month.`);
+    parts.push(
+      `Income ${incomeChange > 0 ? 'grew' : 'dropped'} by ${Math.abs(round2(incomeChange))}% versus last month.`
+    );
   }
 
   if (topCategories.length > 0) {
     const top = topCategories[0];
-    const share = totalExpense > 0 ? round2((top.total / totalExpense) * 100) : 0;
-    parts.push(`Your largest spending category was ${top.category_name} at PKR ${formatNum(top.total)} (${share}% of expenses).`);
+    const share =
+      totalExpense > 0 ? round2((top.total / totalExpense) * 100) : 0;
+    parts.push(
+      `Your largest spending category was ${top.category_name} at ${currency} ${formatNum(top.total)} (${share}% of expenses).`
+    );
   }
 
   // Category growth callouts
-  const growing = categoryGrowth.filter((c) => c.change > 25).slice(0, 2);
+  const growing = categoryGrowth
+    .filter((c) => (c.change_percent ?? c.change) > 25)
+    .slice(0, 2);
   if (growing.length > 0) {
-    parts.push(`Notable increases: ${growing.map((c) => `${c.category_name} (+${round2(c.change)}%)`).join(', ')}.`);
+    parts.push(
+      `Notable increases: ${growing.map((c) => `${c.category_name} (+${round2(c.change_percent ?? c.change)}%)`).join(', ')}.`
+    );
   }
 
   // Budget status
   const exceeded = budgetStatus.filter((b) => b.percentage > 100);
-  const near = budgetStatus.filter((b) => b.percentage >= 80 && b.percentage <= 100);
-  if (exceeded.length > 0) parts.push(`You exceeded ${exceeded.length} budget${exceeded.length === 1 ? '' : 's'}: ${exceeded.map((b) => b.category_name).join(', ')}.`);
-  if (near.length > 0) parts.push(`${near.length} budget${near.length === 1 ? ' is' : 's are'} near the limit: ${near.map((b) => b.category_name).join(', ')}.`);
+  const near = budgetStatus.filter(
+    (b) => b.percentage >= 80 && b.percentage <= 100
+  );
+  if (exceeded.length > 0)
+    parts.push(
+      `You exceeded ${exceeded.length} budget${exceeded.length === 1 ? '' : 's'}: ${exceeded.map((b) => b.category_name).join(', ')}.`
+    );
+  if (near.length > 0)
+    parts.push(
+      `${near.length} budget${near.length === 1 ? ' is' : 's are'} near the limit: ${near.map((b) => b.category_name).join(', ')}.`
+    );
 
   // Unusual transactions
   if (unusualTransactions.length > 0) {
     const u = unusualTransactions[0];
-    parts.push(`One unusually large expense of PKR ${formatNum(u.amount)} ("${u.description}") was detected this month.`);
+    parts.push(
+      `One unusually large expense of ${currency} ${formatNum(u.amount)} ("${u.description}") was detected this month.`
+    );
   }
 
   // Savings goal comparison
   let goalNote = '';
   if (savingsGoal > 0) {
-    if (savings >= savingsGoal) goalNote = `You met your monthly savings goal of PKR ${formatNum(savingsGoal)}. Excellent!`;
-    else goalNote = `You saved PKR ${formatNum(savings)} against a goal of PKR ${formatNum(savingsGoal)} — PKR ${formatNum(savingsGoal - savings)} short.`;
+    if (savings >= savingsGoal)
+      goalNote = `You met your monthly savings goal of ${currency} ${formatNum(savingsGoal)}. Excellent!`;
+    else
+      goalNote = `You saved ${currency} ${formatNum(savings)} against a goal of ${currency} ${formatNum(savingsGoal)} — ${currency} ${formatNum(savingsGoal - savings)} short.`;
   }
 
   const summary = parts.join(' ');
 
   // Actionable recommendations
   const recommendations = [];
-  if (rate < 10) recommendations.push('Aim to save at least 10-20% of your income each month.');
-  if (exceeded.length > 0) recommendations.push(`Review and raise (or respect) budgets for: ${exceeded.map((b) => b.category_name).join(', ')}.`);
-  if (growing.length > 0) recommendations.push(`Watch the fast-growing categories: ${growing.map((c) => c.category_name).join(', ')} — set a specific budget for them.`);
-  if (topCategories.length > 0 && topCategories[0].category_name === 'Food') recommendations.push('Food is your biggest expense — cooking more meals at home could cut this significantly.');
-  if (savingsGoal > 0 && savings < savingsGoal) recommendations.push('Automate a small transfer to your savings goal right when you receive income.');
-  if (recommendations.length === 0) recommendations.push('Keep up your consistent tracking habit — steady data leads to better insights.');
+  if (rate < 10)
+    recommendations.push(
+      'Aim to save at least 10-20% of your income each month.'
+    );
+  if (exceeded.length > 0)
+    recommendations.push(
+      `Review and raise (or respect) budgets for: ${exceeded.map((b) => b.category_name).join(', ')}.`
+    );
+  if (growing.length > 0)
+    recommendations.push(
+      `Watch the fast-growing categories: ${growing.map((c) => c.category_name).join(', ')} — set a specific budget for them.`
+    );
+  if (topCategories.length > 0 && topCategories[0].category_name === 'Food')
+    recommendations.push(
+      'Food is your biggest expense — cooking more meals at home could cut this significantly.'
+    );
+  if (savingsGoal > 0 && savings < savingsGoal)
+    recommendations.push(
+      'Automate a small transfer to your savings goal right when you receive income.'
+    );
+  if (recommendations.length === 0)
+    recommendations.push(
+      'Keep up your consistent tracking habit — steady data leads to better insights.'
+    );
 
   const tip = recommendations.join(' ');
 
@@ -96,7 +148,20 @@ const buildInsight = (data) => {
 };
 
 const getMonthName = (month) => {
-  const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const names = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
   return names[month - 1] || `Month ${month}`;
 };
 

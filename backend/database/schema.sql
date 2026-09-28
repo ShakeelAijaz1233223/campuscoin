@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(255) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
+  `session_version` INT UNSIGNED NOT NULL DEFAULT 0,
   `role` ENUM('student','admin') NOT NULL DEFAULT 'student',
   `status` ENUM('active','inactive','suspended','pending') NOT NULL DEFAULT 'active',
   `email_verified` TINYINT(1) NOT NULL DEFAULT 0,

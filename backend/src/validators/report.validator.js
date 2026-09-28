@@ -7,10 +7,15 @@ const monthlyReportValidator = [
 ];
 
 const rangeReportValidator = [
-  query('format').optional().isIn(['pdf','csv','json']),
-  query('income_category_id').optional({values:'falsy'}).isInt({min:1}),
-  query('start_date').custom(dateIsValid).withMessage('start_date must be YYYY-MM-DD'),
-  query('end_date').custom(dateIsValid).withMessage('end_date must be YYYY-MM-DD'),
+  query('include_transactions').optional().isBoolean(),
+  query('format').optional().isIn(['pdf', 'csv', 'json']),
+  query('income_category_id').optional({ values: 'falsy' }).isInt({ min: 1 }),
+  query('start_date')
+    .custom(dateIsValid)
+    .withMessage('start_date must be YYYY-MM-DD'),
+  query('end_date')
+    .custom(dateIsValid)
+    .withMessage('end_date must be YYYY-MM-DD'),
   query('group_by').optional().isIn(['daily', 'weekly', 'category']),
   query('category_id').optional({ values: 'falsy' }).isInt({ min: 1 })
 ];

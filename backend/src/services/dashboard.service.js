@@ -15,7 +15,8 @@ const getDashboard = async (userId, selectedMonth, selectedYear) => {
   const user = await UserModel.findById(userId);
   const profile = await ProfileModel.findByUserId(userId);
   const current = getCurrentMonth();
-  const month = Number(selectedMonth) || current.month, year = Number(selectedYear) || current.year;
+  const month = Number(selectedMonth) || current.month,
+    year = Number(selectedYear) || current.year;
   const { startDate, endDate } = getMonthRange(year, month);
 
   // Core financials — all from MySQL
@@ -29,11 +30,13 @@ const getDashboard = async (userId, selectedMonth, selectedYear) => {
   const rate = savingsRate(totalIncome, totalExpense);
 
   // Recent transactions & top category
-  const [recentTransactions, topCategory, categorySpending] = await Promise.all([
-    TransactionModel.getRecent(userId, 5),
-    TransactionModel.getTopCategory(userId, startDate, endDate),
-    TransactionModel.getCategorySpending(userId, startDate, endDate)
-  ]);
+  const [recentTransactions, topCategory, categorySpending] = await Promise.all(
+    [
+      TransactionModel.getRecent(userId, 5),
+      TransactionModel.getTopCategory(userId, startDate, endDate),
+      TransactionModel.getCategorySpending(userId, startDate, endDate)
+    ]
+  );
 
   // Budgets vs actual
   await BudgetModel.recalculateSpent(userId, month, year);
@@ -42,39 +45,82 @@ const getDashboard = async (userId, selectedMonth, selectedYear) => {
   const budgetSummary = {
     total_budget: round2(parseFloat(budgetTotals.total)),
     total_spent: round2(parseFloat(budgetTotals.spent)),
-    percentage: parseFloat(budgetTotals.total) > 0 ? round2((parseFloat(budgetTotals.spent) / parseFloat(budgetTotals.total)) * 100) : 0
+    percentage:
+      parseFloat(budgetTotals.total) > 0
+        ? round2(
+            (parseFloat(budgetTotals.spent) / parseFloat(budgetTotals.total)) *
+              100
+          )
+        : 0
   };
 
   // Alerts
   const nearLimit = await BudgetModel.getNearLimit(userId, month, year);
   const exceeded = await BudgetModel.getExceeded(userId, month, year);
   const budgetAlerts = [
-    ...exceeded.map((b) => ({ type: 'exceeded', category: b.category_name, budget_id: b.id, percentage: b.amount > 0 ? round2((parseFloat(b.spent) / parseFloat(b.amount)) * 100) : 0 })),
-    ...nearLimit.map((b) => ({ type: 'near_limit', category: b.category_name, budget_id: b.id, percentage: b.amount > 0 ? round2((parseFloat(b.spent) / parseFloat(b.amount)) * 100) : 0 }))
+    ...exceeded.map((b) => ({
+      type: 'exceeded',
+      category: b.category_name,
+      budget_id: b.id,
+      percentage:
+        b.amount > 0
+          ? round2((parseFloat(b.spent) / parseFloat(b.amount)) * 100)
+          : 0
+    })),
+    ...nearLimit.map((b) => ({
+      type: 'near_limit',
+      category: b.category_name,
+      budget_id: b.id,
+      percentage:
+        b.amount > 0
+          ? round2((parseFloat(b.spent) / parseFloat(b.amount)) * 100)
+          : 0
+    }))
   ];
 
   // Goals overview
   const { goals } = await GoalModel.findByUser(userId, { status: 'active' });
   const activeGoals = goals.map((g) => ({
-    id: g.id, name: g.name,
-    percentage: parseFloat(g.target_amount) > 0 ? round2(Math.min(100, (parseFloat(g.current_amount) / parseFloat(g.target_amount)) * 100)) : 0
+    id: g.id,
+    name: g.name,
+    target_amount: g.target_amount,
+    current_amount: g.current_amount,
+    percentage:
+      parseFloat(g.target_amount) > 0
+        ? round2(
+            Math.min(
+              100,
+              (parseFloat(g.current_amount) / parseFloat(g.target_amount)) * 100
+            )
+          )
+        : 0
   }));
 
   // Upcoming bills
   const upcomingBills = await BillModel.getUpcoming(userId, 7);
 
   // Saving tips: personalized + system fallback
-  const savingTips = buildSavingTips({ totalExpense, categorySpending, budgets, profile });
+  const savingTips = buildSavingTips({
+    totalExpense,
+    categorySpending,
+    budgets,
+    profile
+  });
 
   // Current insight
-  const currentInsight = await InsightModel.getLatest(userId);
+  const currentInsight = await InsightModel.findByMonthYear(
+    userId,
+    month,
+    year
+  );
 
   // Unread notifications count
   const unreadNotifications = await NotificationModel.getUnreadCount(userId);
 
   const hour = new Date().getHours();
   const greetingName = profile?.first_name || user.email.split('@')[0];
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return {
     greeting: {
@@ -88,19 +134,24 @@ const getDashboard = async (userId, selectedMonth, selectedYear) => {
       currency: profile?.currency || 'PKR'
     },
     month_summary: {
-      month, year,
+      month,
+      year,
       income: round2(totalIncome),
       expense: round2(totalExpense),
       savings,
       savings_rate: rate
     },
-    top_category: topCategory ? { name: topCategory.name, total: round2(parseFloat(topCategory.total)) } : null,
+    top_category: topCategory
+      ? { name: topCategory.name, total: round2(parseFloat(topCategory.total)) }
+      : null,
     budget_summary: budgetSummary,
     budget_alerts: budgetAlerts,
     recent_transactions: recentTransactions,
     budgets,
     category_spending: categorySpending,
-    monthly_overview: (await require('./report.service').getMonthlyReport(userId, year, month)).monthlyTrend.map(r=>({...r,name:r.label})),
+    monthly_overview: (
+      await require('./report.service').getMonthlyReport(userId, year, month)
+    ).monthlyTrend.map((r) => ({ ...r, name: r.label })),
     spending_trend: await buildSpendingTrend(userId, startDate, endDate),
     saving_tips: savingTips,
     current_insight: currentInsight,
@@ -111,19 +162,33 @@ const getDashboard = async (userId, selectedMonth, selectedYear) => {
 };
 
 const buildSpendingTrend = async (userId, startDate, endDate) => {
-  const daily = await TransactionModel.getDailySpending(userId, startDate, endDate);
+  const daily = await TransactionModel.getDailySpending(
+    userId,
+    startDate,
+    endDate
+  );
   const byDate = {};
   for (const row of daily) {
-    if (!byDate[row.date]) byDate[row.date] = { date: row.date, income: 0, expense: 0 };
+    if (!byDate[row.date])
+      byDate[row.date] = { date: row.date, income: 0, expense: 0 };
     byDate[row.date][row.type] += parseFloat(row.total);
   }
-  return Object.values(byDate).map((d) => ({ date: d.date, income: round2(d.income), expense: round2(d.expense) }));
+  return Object.values(byDate).map((d) => ({
+    date: d.date,
+    income: round2(d.income),
+    expense: round2(d.expense)
+  }));
 };
 
 /**
  * Personalized saving tips built from real user data with potential savings impact.
  */
-const buildSavingTips = ({ totalExpense, categorySpending, budgets, profile }) => {
+const buildSavingTips = ({
+  totalExpense,
+  categorySpending,
+  budgets,
+  profile
+}) => {
   const tips = [];
 
   for (const cat of categorySpending) {
@@ -132,7 +197,7 @@ const buildSavingTips = ({ totalExpense, categorySpending, budgets, profile }) =
     if (share > 25 && cat.category_name === 'Food') {
       tips.push({
         title: 'Reduce food spending',
-        content: `Food is ${Math.round(share)}% of your spending this month. Cooking 2 more meals at home per week could save around PKR ${round2(total * 0.2)}.`,
+        content: `Food is ${Math.round(share)}% of your spending this month. Cooking 2 more meals at home per week could save around ${profile?.currency || 'PKR'} ${round2(total * 0.2)}.`,
         potential_savings: round2(total * 0.2),
         category: 'food'
       });
@@ -148,12 +213,17 @@ const buildSavingTips = ({ totalExpense, categorySpending, budgets, profile }) =
   }
 
   for (const b of budgets) {
-    const pct = parseFloat(b.amount) > 0 ? (parseFloat(b.spent) / parseFloat(b.amount)) * 100 : 0;
+    const pct =
+      parseFloat(b.amount) > 0
+        ? (parseFloat(b.spent) / parseFloat(b.amount)) * 100
+        : 0;
     if (pct > 90) {
       tips.push({
         title: `${b.category_name} budget nearly used`,
         content: `You've used ${Math.round(pct)}% of your ${b.category_name} budget. Pause non-essential ${b.category_name.toLowerCase()} spending for the rest of the month.`,
-        potential_savings: round2(Math.max(0, parseFloat(b.spent) - parseFloat(b.amount))),
+        potential_savings: round2(
+          Math.max(0, parseFloat(b.spent) - parseFloat(b.amount))
+        ),
         category: 'budget'
       });
     }
@@ -171,7 +241,8 @@ const buildSavingTips = ({ totalExpense, categorySpending, budgets, profile }) =
   if (tips.length === 0) {
     tips.push({
       title: 'Keep tracking!',
-      content: 'Record your income and expenses to build a clearer picture of your finances.',
+      content:
+        'Record your income and expenses to build a clearer picture of your finances.',
       potential_savings: 0,
       category: 'general'
     });

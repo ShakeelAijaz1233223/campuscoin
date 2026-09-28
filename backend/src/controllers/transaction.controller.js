@@ -1,6 +1,11 @@
+const { matchedData } = require('express-validator');
 const asyncHandler = require('../utils/asyncHandler');
 const transactionService = require('../services/transaction.service');
-const { sendSuccess, sendCreated, sendPaginated } = require('../utils/response');
+const {
+  sendSuccess,
+  sendCreated,
+  sendPaginated
+} = require('../utils/response');
 const { getPagination, buildPaginationMeta } = require('../utils/pagination');
 
 const getTransactions = asyncHandler(async (req, res) => {
@@ -19,32 +24,65 @@ const getTransactions = asyncHandler(async (req, res) => {
     order: req.query.order || 'DESC'
   };
   const result = await transactionService.getTransactions(req.user.id, filters);
-  const meta = buildPaginationMeta(result.total, pagination.page, pagination.limit);
-  return sendPaginated(res, { transactions: result.transactions, summary: result.summary }, meta, 'Transactions retrieved');
+  const meta = buildPaginationMeta(
+    result.total,
+    pagination.page,
+    pagination.limit
+  );
+  return sendPaginated(
+    res,
+    { transactions: result.transactions, summary: result.summary },
+    meta,
+    'Transactions retrieved'
+  );
 });
 
 const getTransaction = asyncHandler(async (req, res) => {
-  const transaction = await transactionService.getTransaction(req.user.id, parseInt(req.params.id));
+  const transaction = await transactionService.getTransaction(
+    req.user.id,
+    parseInt(req.params.id)
+  );
   await transactionService.recordView(req.user.id, parseInt(req.params.id));
   return sendSuccess(res, { transaction }, 'Transaction retrieved');
 });
 
 const createTransaction = asyncHandler(async (req, res) => {
-  const result = await transactionService.createTransaction(req.user.id, req.body, req.ip);
-  return sendCreated(res, {
-    transaction: result.transaction,
-    duplicate_warning: result.duplicateWarning,
-    ai_suggestion: result.aiSuggestion
-  }, 'Transaction created successfully');
+  const result = await transactionService.createTransaction(
+    req.user.id,
+    matchedData(req, { locations: ['body'] }),
+    req.ip
+  );
+  return sendCreated(
+    res,
+    {
+      transaction: result.transaction,
+      duplicate_warning: result.duplicateWarning,
+      ai_suggestion: result.aiSuggestion
+    },
+    'Transaction created successfully'
+  );
 });
 
 const updateTransaction = asyncHandler(async (req, res) => {
-  const result = await transactionService.updateTransaction(req.user.id, parseInt(req.params.id), req.body, req.ip);
-  return sendSuccess(res, { transaction: result.transaction }, 'Transaction updated successfully');
+  const result = await transactionService.updateTransaction(
+    req.user.id,
+    parseInt(req.params.id),
+    matchedData(req, { locations: ['body'] }),
+    req.ip
+  );
+  return sendSuccess(
+    res,
+    { transaction: result.transaction },
+    'Transaction updated successfully'
+  );
 });
 
 const deleteTransaction = asyncHandler(async (req, res) => {
-  await transactionService.deleteTransaction(req.user.id, parseInt(req.params.id), req.ip);
+  await transactionService.deleteTransaction(
+    req.user.id,
+    parseInt(req.params.id),
+    req.ip
+  );
   return sendSuccess(res, null, 'Transaction deleted successfully');
 });
 
@@ -60,7 +98,20 @@ const getRecentlyEdited = asyncHandler(async (req, res) => {
 
 const getUnusuallyLarge = asyncHandler(async (req, res) => {
   const transactions = await transactionService.getUnusuallyLarge(req.user.id);
-  return sendSuccess(res, { transactions, advisory: true }, 'Unusually large transactions');
+  return sendSuccess(
+    res,
+    { transactions, advisory: true },
+    'Unusually large transactions'
+  );
 });
 
-module.exports = { getTransactions, getTransaction, createTransaction, updateTransaction, deleteTransaction, getRecentlyViewed, getRecentlyEdited, getUnusuallyLarge };
+module.exports = {
+  getTransactions,
+  getTransaction,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+  getRecentlyViewed,
+  getRecentlyEdited,
+  getUnusuallyLarge
+};
