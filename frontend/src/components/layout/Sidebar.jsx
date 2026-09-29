@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import useMobileNavigation from '../../hooks/useMobileNavigation';
 import { NavLink, Link } from 'react-router-dom';
 import { LogOut, ArrowUpRight, ChevronDown, X, Compass } from 'lucide-react';
@@ -112,12 +113,33 @@ export default function Sidebar({ open, onClose }) {
                   end
                   onClick={onClose}
                   className={({ isActive }) =>
-                    isActive ? 'nav-link active' : 'nav-link'
+                    isActive ? 'nav-link active nova-nav-active' : 'nav-link'
                   }
                 >
-                  <n.icon size={18} />
-                  <span>{n.label}</span>
-                  {n.badge && <em>{n.badge}</em>}
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.span
+                          layoutId="nova-sidebar-indicator"
+                          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                          aria-hidden="true"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: '18%',
+                            bottom: '18%',
+                            width: 3,
+                            borderRadius: 99,
+                            background:
+                              'linear-gradient(180deg, var(--accent), var(--purple))'
+                          }}
+                        />
+                      )}
+                      <n.icon size={18} />
+                      <span>{n.label}</span>
+                      {n.badge && <em>{n.badge}</em>}
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>

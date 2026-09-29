@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import useAuth from '../hooks/useAuth';
 import useDashboard from '../hooks/useDashboard';
 import reportApi from '../api/reportApi';
@@ -35,6 +36,8 @@ import transactionApi from '../api/transactionApi';
 import { today } from '../utils/formatDate';
 import { buildYearMonths } from '../utils/chartData';
 import { useApp } from '../context/AppContext';
+import { StaggerGroup, StaggerItem, ScaleIn, ViewportReveal } from '../components/ui/Nova';
+import { itemVariants } from '../motion/variants';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -83,63 +86,95 @@ export default function Dashboard() {
         </Card>
       ) : (
         d && (
-          <div className="stagger">
+          <StaggerGroup className="stagger">
+            {/* Hierarchy 1 — hero balance + bills */}
             <div className="dashboard-top">
-              <HeroCard balance={d.balance} currency={currency} />
-              <UpcomingBills items={d.upcomingBills} currency={currency} />
+              <StaggerItem variants={itemVariants}>
+                <HeroCard balance={d.balance} currency={currency} />
+              </StaggerItem>
+              <StaggerItem variants={itemVariants} className="h-full">
+                <UpcomingBills items={d.upcomingBills} currency={currency} />
+              </StaggerItem>
             </div>
+
+            {/* Hierarchy 2 — metric strip */}
             <div className="dashboard-summary">
-              <IncomeCard value={d.income} currency={currency} daily={daily} />
-              <ExpenseCard
-                value={d.expense}
-                currency={currency}
-                daily={daily}
-              />
-              <SavingsCard
-                rate={d.savings_rate}
-                value={d.savings}
-                currency={currency}
-                daily={daily}
-              />
-            </div>
-            <div className="dashboard-grid">
-              {annual.loading ? (
-                <Card className="span-eight">
-                  <Loading label="Loading your annual cash flow…" />
-                </Card>
-              ) : annual.error ? (
-                <Card className="span-eight">
-                  <ErrorState error={annual.error} onRetry={annual.refresh} />
-                </Card>
-              ) : (
-                <SpendingRhythm
-                  className="span-eight"
-                  months={yearReport ? buildYearMonths(yearReport, year) : []}
+              {[
+                <IncomeCard key="inc" value={d.income} currency={currency} daily={daily} />,
+                <ExpenseCard key="exp" value={d.expense} currency={currency} daily={daily} />,
+                <SavingsCard
+                  key="sav"
+                  rate={d.savings_rate}
+                  value={d.savings}
                   currency={currency}
-                  badge={String(year)}
+                  daily={daily}
                 />
+              ].map((el, i) => (
+                <ScaleIn key={el.key} delay={i}>
+                  {el}
+                </ScaleIn>
+              ))}
+            </div>
+
+            {/* Hierarchy 3 — cash flow + insights + ledger */}
+            <div className="dashboard-grid">
+              <ViewportReveal className="span-eight">
+                {annual.loading ? (
+                  <Card className="span-eight">
+                    <Loading label="Loading your annual cash flow…" />
+                  </Card>
+                ) : annual.error ? (
+                  <Card className="span-eight">
+                    <ErrorState error={annual.error} onRetry={annual.refresh} />
+                  </Card>
+                ) : (
+                  <SpendingRhythm
+                    months={yearReport ? buildYearMonths(yearReport, year) : []}
+                    currency={currency}
+                    badge={String(year)}
+                  />
+                )}
+              </ViewportReveal>
+              <ViewportReveal className="span-four">
+                <InsightCard insight={d.insight} month={monthNum} year={year} />
+              </ViewportReveal>
+              <ViewportReveal className="span-eight">
+                <RecentTransactions
+                  items={d.recentTransactions}
+                  currency={currency}
+                  onAdd={() => setAdd(true)}
+                />
+              </ViewportReveal>
+              <ViewportReveal className="span-four">
+                <BudgetCheckIn summary={d.budgetSummary} budgets={d.budgets} currency={currency} />
+              </ViewportReveal>
+              {d.alerts?.length > 0 && (
+                <motion.div variants={itemVariants} initial="initial" animate="animate" className="span-two">
+                  <BudgetAlerts alerts={d.alerts} />
+                </motion.div>
               )}
-              <InsightCard insight={d.insight} month={monthNum} year={year} />
-              <RecentTransactions
-                items={d.recentTransactions}
-                currency={currency}
-                onAdd={() => setAdd(true)}
-              />
-              <BudgetCheckIn
-                summary={d.budgetSummary}
-                budgets={d.budgets}
-                currency={currency}
-              />
-              {d.alerts?.length > 0 && <BudgetAlerts alerts={d.alerts} />}
             </div>
+
+            {/* Hierarchy 4 — deeper analysis */}
             <div className="lower-grid">
-              <TopCategories data={d.categories} currency={currency} />
-              <MonthlyOverview data={d.monthlyOverview} currency={currency} />
-              <BudgetVsActual data={d.budgetActual} currency={currency} />
-              <SavingTipsWidget tips={d.tips} />
+              <ViewportReveal>
+                <TopCategories data={d.categories} currency={currency} />
+              </ViewportReveal>
+              <ViewportReveal>
+                <MonthlyOverview data={d.monthlyOverview} currency={currency} />
+              </ViewportReveal>
+              <ViewportReveal>
+                <BudgetVsActual data={d.budgetActual} currency={currency} />
+              </ViewportReveal>
+              <ViewportReveal>
+                <SavingTipsWidget tips={d.tips} />
+              </ViewportReveal>
             </div>
-            <GoalOverview items={d.activeGoals} currency={currency} />
-          </div>
+
+            <ViewportReveal>
+              <GoalOverview items={d.activeGoals} currency={currency} />
+            </ViewportReveal>
+          </StaggerGroup>
         )
       )}
       <Modal open={add} title="A new transaction" onClose={() => setAdd(false)}>

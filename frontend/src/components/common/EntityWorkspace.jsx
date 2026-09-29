@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import GoalContributions from '../goals/GoalContributions';
+import { motion } from 'framer-motion';
 import useAuth from '../../hooks/useAuth';
 import {
   Plus,
@@ -153,7 +154,7 @@ export default function EntityWorkspace({
           />
         )}
       </Modal>
-      <Card className="collection">
+      <motion.div initial={{y:14}} animate={{y:0}} transition={{duration:0.45,ease:[0.22,1,0.36,1]}}><Card className="collection">
         <div className="collection-toolbar">
           <div className="row">
             <span className="status-dot" />
@@ -348,7 +349,7 @@ export default function EntityWorkspace({
           </div>
         ) : (
           <div className="table-scroll">
-            <table>
+            <table className="nova-table">
               <thead>
                 <tr>
                   {config.columns.map((k) => (
@@ -412,7 +413,7 @@ export default function EntityWorkspace({
             onChange={(page) => setParams((p) => ({ ...p, page }))}
           />
         )}
-      </Card>
+      </Card></motion.div>
       <Modal
         open={!!edit}
         title={`${edit?.id ? 'Edit' : 'New'} ${config.singular}`}
