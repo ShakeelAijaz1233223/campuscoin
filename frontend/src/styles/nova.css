@@ -1,0 +1,597 @@
+/* ============================================================
+   CampusCoin NOVA — premium design layer
+   Dark luxury · liquid glass · aurora · futuristic minimalism
+   Loaded after nocturne.css; redefines the token palette and
+   adds the Nova component vocabulary on top of the stable UI.
+   ============================================================ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  --color-ink: #04060c;
+  --color-ink-2: #080b14;
+  --color-surface: #0c1120;
+  --color-surface-2: #111829;
+  --color-mist: #93a1c0;
+  --color-fog: #64748f;
+  --color-chalk: #e8edfa;
+  --color-aurora: #67e8f9;
+  --color-aurora-2: #a78bfa;
+  --color-aurora-3: #f472b6;
+  --color-gold: #f5c451;
+  --color-jade: #34d399;
+  --color-ember: #fb7185;
+  --color-sky: #60a5fa;
+  --font-display:
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius-nova: 20px;
+  --shadow-nova:
+    0 24px 70px -28px rgba(2, 4, 12, 0.85), 0 2px 10px -4px rgba(2, 4, 12, 0.6);
+}
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  /* canvas */
+  --bg: #04060c;
+  --surface: #0c1120;
+  --surface-2: #121a2c;
+  --surface-hover: #172036;
+  --glass: rgba(13, 19, 34, 0.66);
+  /* text */
+  --text: #dfe6f5;
+  --heading: #f5f8ff;
+  --muted: #93a1c0;
+  --dim: #7887a8;
+  /* structure */
+  --border: rgba(148, 180, 255, 0.1);
+  --border-strong: rgba(148, 180, 255, 0.22);
+  /* accents — aurora */
+  --accent: #67e8f9;
+  --accent-strong: #8ff3ff;
+  --accent-ink: #04222c;
+  --accent-soft: rgba(103, 232, 249, 0.1);
+  --accent-line: rgba(103, 232, 249, 0.3);
+  --accent-glow: rgba(103, 232, 249, 0.18);
+  --blue: #60a5fa;
+  --blue-soft: rgba(96, 165, 250, 0.12);
+  --cyan: #67e8f9;
+  --cyan-soft: rgba(103, 232, 249, 0.1);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.12);
+  --pink: #f472b6;
+  --pink-soft: rgba(244, 114, 182, 0.11);
+  --teal: #2dd4bf;
+  --teal-soft: rgba(45, 212, 191, 0.1);
+  --orange: #f5c451;
+  --orange-soft: rgba(245, 196, 81, 0.12);
+  --gold: #f5c451;
+  --danger: #fb7185;
+  --danger-soft: rgba(251, 113, 133, 0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.12);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.12);
+  --chart-grid: rgba(148, 180, 255, 0.08);
+  --chart-1: #67e8f9;
+  --chart-2: #a78bfa;
+  --chart-3: #f472b6;
+  --chart-4: #f5c451;
+  --chart-5: #60a5fa;
+  --chart-6: #2dd4bf;
+  --bg-canvas-a: rgba(90, 70, 200, 0.16);
+  --bg-canvas-b: rgba(40, 130, 190, 0.12);
+  --bg-canvas-c: rgba(190, 70, 150, 0.1);
+  --shadow: 0 24px 70px -28px rgba(2, 4, 12, 0.85);
+  --shadow-sm: 0 10px 30px -16px rgba(2, 4, 12, 0.7);
+  --shadow-hover:
+    0 28px 80px -28px rgba(2, 4, 12, 0.9), 0 0 32px -10px var(--accent-glow);
+  --card-glow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 50px -24px rgba(2, 4, 12, 0.8);
+  --radius: 22px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
+  --primary-grad: linear-gradient(115deg, #7deefc, #9b8cf9 55%, #f49fd2);
+  --primary-grad-soft: linear-gradient(
+    115deg,
+    rgba(125, 238, 252, 0.14),
+    rgba(155, 140, 249, 0.08)
+  );
+  --hero-grad:
+    radial-gradient(ellipse 90% 70% at 85% 15%, rgba(120, 90, 230, 0.2), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 10% 90%, rgba(40, 150, 210, 0.16), transparent 60%),
+    linear-gradient(150deg, #0a0f1e, #04060c 70%);
+  --insight-grad:
+    radial-gradient(ellipse 80% 90% at 100% 0%, rgba(160, 110, 240, 0.2), transparent 55%),
+    linear-gradient(140deg, #10162a, #0a0e1c);
+  --aurora-wave: linear-gradient(
+    115deg,
+    rgba(103, 232, 249, 0.85),
+    rgba(167, 139, 250, 0.85),
+    rgba(244, 114, 182, 0.75),
+    rgba(103, 232, 249, 0.85)
+  );
+  --money-grad: linear-gradient(115deg, #f5c451, #f7a76c 60%, #f472b6);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f3f5fb;
+  --surface: #ffffff;
+  --surface-2: #eef2fb;
+  --surface-hover: #e9eefb;
+  --glass: rgba(255, 255, 255, 0.72);
+  --text: #232b40;
+  --heading: #121828;
+  --muted: #5b6780;
+  --dim: #5d6b87;
+  --border: rgba(40, 60, 110, 0.12);
+  --border-strong: rgba(40, 60, 110, 0.22);
+  --accent: #0891b2;
+  --accent-strong: #0e7490;
+  --accent-ink: #ecfeff;
+  --accent-soft: rgba(8, 145, 178, 0.1);
+  --accent-line: rgba(8, 145, 178, 0.3);
+  --accent-glow: rgba(8, 145, 178, 0.14);
+  --purple: #7c3aed;
+  --pink: #db2777;
+  --blue: #2563eb;
+  --teal: #0d9488;
+  --orange: #b45309;
+  --gold: #b45309;
+  --danger: #e11d48;
+  --warning: #b45309;
+  --success: #059669;
+  --chart-1: #0891b2;
+  --chart-2: #7c3aed;
+  --chart-3: #db2777;
+  --chart-4: #b45309;
+  --chart-5: #2563eb;
+  --chart-6: #0d9488;
+  --bg-canvas-a: rgba(110, 130, 240, 0.1);
+  --bg-canvas-b: rgba(60, 160, 210, 0.08);
+  --bg-canvas-c: rgba(200, 110, 180, 0.07);
+  --shadow: 0 20px 50px -26px rgba(30, 45, 90, 0.28);
+  --shadow-sm: 0 10px 26px -16px rgba(30, 45, 90, 0.22);
+  --hero-grad:
+    radial-gradient(ellipse 90% 70% at 85% 15%, rgba(120, 100, 230, 0.12), transparent 60%),
+    linear-gradient(150deg, #eef2fb, #f5f7fd 70%);
+  --primary-grad: linear-gradient(115deg, #0891b2, #6d28d9 60%, #db2777);
+  --aurora-wave: linear-gradient(115deg, #0891b2, #7c3aed, #db2777, #0891b2);
+  --money-grad: linear-gradient(115deg, #b45309, #c2410c 60%, #be185d);
+}
+
+/* ---------- Nova surfaces ---------- */
+.nova-glass {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015)),
+    var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: var(--card-glow);
+  border-radius: var(--radius);
+}
+.nova-glass-soft {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)), var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+[data-theme='light'] .nova-glass,
+[data-theme='light'] .nova-glass-soft {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.62)), var(--glass);
+}
+
+/* hairline top light — liquid-glass edge */
+.nova-edge {
+  position: relative;
+}
+.nova-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ---------- aurora canvas ---------- */
+.nova-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+}
+.nova-aurora::before {
+  content: '';
+  position: absolute;
+  width: 120vmax;
+  height: 120vmax;
+  top: -55vmax;
+  right: -35vmax;
+  background:
+    radial-gradient(closest-side, var(--bg-canvas-a), transparent 70%);
+  filter: blur(10px);
+}
+.nova-aurora::after {
+  content: '';
+  position: absolute;
+  width: 100vmax;
+  height: 100vmax;
+  bottom: -55vmax;
+  left: -35vmax;
+  background:
+    radial-gradient(closest-side, var(--bg-canvas-b), transparent 70%);
+  filter: blur(10px);
+}
+
+/* subtle engineering grid */
+.nova-grid {
+  background-image:
+    linear-gradient(rgba(148, 180, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 180, 255, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 25%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 25%, transparent 85%);
+}
+
+/* ---------- spotlight (Aceternity-inspired) ---------- */
+.nova-spotlight {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.nova-spotlight::before {
+  content: '';
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  left: var(--sx, 50%);
+  top: var(--sy, 0);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(148, 210, 255, 0.22), transparent 75%);
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.nova-spotlight-target:hover .nova-spotlight::before,
+.nova-spotlight-target:focus-within .nova-spotlight::before {
+  opacity: 1;
+}
+
+/* ---------- moving border ---------- */
+@keyframes nova-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.nova-moving-border {
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.nova-moving-border::before {
+  content: '';
+  position: absolute;
+  inset: -120%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(103, 232, 249, 0.75) 55deg,
+    rgba(167, 139, 250, 0.7) 110deg,
+    transparent 165deg,
+    transparent 360deg
+  );
+  animation: nova-spin 6s linear infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.nova-moving-border:hover::before,
+.nova-moving-border:focus-within::before {
+  opacity: 0.65;
+}
+.nova-moving-border > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- shimmer text / skeleton ---------- */
+@keyframes nova-shimmer {
+  0% {
+    background-position: -160% 0;
+  }
+  100% {
+    background-position: 260% 0;
+  }
+}
+.nova-shimmer-text {
+  background: linear-gradient(
+    100deg,
+    var(--text) 20%,
+    var(--accent-strong) 38%,
+    var(--purple) 48%,
+    var(--text) 62%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: nova-shimmer 5.5s linear infinite;
+}
+.nova-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius-xs);
+}
+.nova-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 180, 255, 0.09),
+    transparent
+  );
+  animation: nova-shimmer 1.6s ease-in-out infinite;
+}
+
+/* ---------- gradient text ---------- */
+.nova-gradient-text {
+  background: var(--aurora-wave);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.nova-money-text {
+  background: var(--money-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- holographic badge ---------- */
+.nova-holo {
+  background:
+    linear-gradient(120deg, rgba(103, 232, 249, 0.16), rgba(167, 139, 250, 0.16), rgba(244, 114, 182, 0.14));
+  border: 1px solid rgba(148, 180, 255, 0.2);
+  border-radius: 999px;
+  color: var(--heading);
+}
+
+/* ---------- bento ---------- */
+.nova-bento {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.nova-bento > * {
+  min-width: 0;
+}
+@media (max-width: 1024px) {
+  .nova-bento {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .nova-bento {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .nova-bento > [class*='col-span'] {
+    grid-column: auto;
+  }
+}
+
+/* ---------- table glass header ---------- */
+.nova-table thead th {
+  background: linear-gradient(180deg, rgba(148, 180, 255, 0.07), rgba(148, 180, 255, 0.02));
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nova-table tbody tr {
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+.nova-table tbody tr:hover {
+  background: rgba(148, 180, 255, 0.055);
+}
+
+/* ---------- buttons (refined) ---------- */
+.nova-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  padding: 0.62rem 1.15rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+  will-change: transform;
+}
+.nova-btn:active {
+  transform: translateY(1px) scale(0.985);
+}
+.nova-btn-primary {
+  background: var(--primary-grad);
+  color: var(--accent-ink);
+  box-shadow: 0 12px 32px -12px var(--accent-glow);
+}
+.nova-btn-primary:hover {
+  box-shadow:
+    0 16px 40px -12px var(--accent-glow),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+.nova-btn-ghost {
+  border: 1px solid var(--border-strong);
+  background: rgba(148, 180, 255, 0.05);
+  color: var(--heading);
+}
+.nova-btn-ghost:hover {
+  border-color: var(--accent-line);
+  background: rgba(148, 180, 255, 0.1);
+}
+
+/* ---------- inputs ---------- */
+.nova-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: rgba(6, 10, 20, 0.5);
+  color: var(--heading);
+  padding: 0.62rem 0.9rem;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+[data-theme='light'] .nova-input {
+  background: #fff;
+}
+.nova-input:focus {
+  outline: none;
+  border-color: var(--accent-line);
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 12px 32px -18px var(--accent-glow);
+}
+
+/* ---------- hero cinematic ---------- */
+.nova-hero-title {
+  font-size: clamp(2.5rem, 6.2vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+.nova-section-title {
+  font-size: clamp(1.65rem, 3.2vw, 2.35rem);
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  font-weight: 750;
+}
+
+/* eyebrow */
+.nova-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.nova-eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent));
+}
+
+/* active nav pill */
+.nova-nav-active {
+  background: linear-gradient(115deg, rgba(103, 232, 249, 0.12), rgba(167, 139, 250, 0.1));
+  color: var(--heading) !important;
+  border-color: rgba(103, 232, 249, 0.28);
+  box-shadow: 0 10px 30px -16px var(--accent-glow);
+}
+
+/* focus visibility (a11y) */
+.nova-focus:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nova-moving-border::before,
+  .nova-shimmer-text,
+  .nova-skeleton::after {
+    animation: none !important;
+  }
+}
+
+/* sidebar nav polish */
+.nav-link {
+  position: relative;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+.nav-link:hover {
+  transform: translateX(2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-link:hover {
+    transform: none;
+  }
+}
+
+.mobile-nav-link {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.auth-story {
+  position: relative;
+  overflow: hidden;
+}
+
+/* shared form focus glow — lifts every existing input */
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.compact-search:focus,
+.auth-form input:focus {
+  border-color: var(--accent-line) !important;
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    0 12px 32px -18px var(--accent-glow);
+  outline: none;
+}
+/* button depth */
+.button.primary {
+  box-shadow: 0 12px 30px -14px var(--accent-glow);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+.button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px -14px var(--accent-glow);
+}
+.button:active {
+  transform: translateY(1px) scale(0.985);
+}
+@media (prefers-reduced-motion: reduce) {
+  .button.primary:hover {
+    transform: none;
+  }
+}
+
+/* form placeholders — forms.css is not imported; keep contrast AA */
+input::placeholder,textarea::placeholder,select::placeholder{color:var(--dim);opacity:1}

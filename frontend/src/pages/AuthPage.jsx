@@ -20,6 +20,9 @@ import {
 import useAuth from '../hooks/useAuth';
 import authApi from '../api/authApi';
 import Hologram from '../components/illustrations/Hologram';
+import { motion } from 'framer-motion';
+import { GradientText } from '../components/ui/Nova';
+import { EASE_OUT } from '../motion/variants';
 const texts = {
   login: {
     title: 'Back to your flow.',
@@ -113,22 +116,41 @@ export default function AuthPage({ mode }) {
   return (
     <main className="auth-layout" id="main">
       <section className="auth-story">
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'url(/visuals/auth-aurora.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.42,
+            maskImage: 'radial-gradient(ellipse 90% 75% at 55% 40%, black 30%, transparent 85%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 90% 75% at 55% 40%, black 30%, transparent 85%)'
+          }}
+        />
         <Brand />
-        <div>
-          <span className="pill">
+        <motion.div
+          initial={{ y: 24, filter: 'blur(8px)' }}
+          animate={{ y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 0.7, ease: EASE_OUT }}
+          style={{ position: 'relative' }}
+        >
+          <span className="pill nova-holo">
             <span className="status-dot" /> YOUR MONEY. YOUR MOMENTUM.
           </span>
-          <h1>
+          <h1 className="nova-hero-title" style={{ fontSize: 'clamp(2.3rem, 4.5vw, 3.6rem)' }}>
             Make room
             <br />
-            for <span className="serif-gradient">more.</span>
+            for <GradientText>more.</GradientText>
           </h1>
           <p>
             For late-night ideas. For your next adventure.
             <br />
             For the life you’re building.
           </p>
-        </div>
+        </motion.div>
         <div className="auth-art">
           <Hologram />
         </div>
@@ -141,7 +163,7 @@ export default function AuthPage({ mode }) {
         <Link to="/" className="text-button neutral">
           <ArrowLeft size={16} /> Back to home
         </Link>
-        <div className="auth-form-wrap">
+        <motion.div initial={{y:22}} animate={{y:0}} transition={{duration:0.55,delay:0.12,ease:EASE_OUT}} className="auth-form-wrap">
           <div className="row" style={{ gap: 9, marginBottom: 6 }}>
             <CoinMark size={30} />
             <p className="eyebrow" style={{ margin: 0 }}>
@@ -284,7 +306,7 @@ export default function AuthPage({ mode }) {
               </>
             )}
           </p>
-        </div>
+        </motion.div>
         <small className="muted">
           Built for campus life. Designed for your future.
         </small>

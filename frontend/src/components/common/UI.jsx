@@ -1,5 +1,7 @@
 import { useEffect, useRef, useId } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { EASE_OUT } from '../../motion/variants';
 import errorHandler from '../../utils/errorHandler';
 import {
   X,
@@ -194,6 +196,11 @@ export function Modal({ open, title, children, onClose }) {
           onClose();
       }}
     >
+      <motion.div
+        initial={{ scale: 0.95, y: 14 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ duration: 0.28, ease: EASE_OUT }}
+      >
       <div className="row between modal-head">
         <h2 id={id}>{title}</h2>
         <IconButton
@@ -207,6 +214,7 @@ export function Modal({ open, title, children, onClose }) {
         </IconButton>
       </div>
       {children}
+      </motion.div>
     </dialog>,
     document.body
   );
@@ -265,21 +273,36 @@ export function EmptyState({
   art
 }) {
   return (
-    <div className="state">
+    <motion.div
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.4, ease: EASE_OUT }}
+      className="state"
+    >
       {art || (
-        <span className="empty-art">
+        <motion.span
+          className="empty-art"
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
           <Inbox size={30} />
-        </span>
+        </motion.span>
       )}
       <h3>{title}</h3>
       <p>{description}</p>
       {action}
-    </div>
+    </motion.div>
   );
 }
 export function ErrorState({ error, onRetry }) {
   return (
-    <div className="state error-state" role="alert">
+    <motion.div
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.35, ease: EASE_OUT }}
+      className="state error-state"
+      role="alert"
+    >
       <AlertTriangle size={25} />
       <h3>We couldn’t load this.</h3>
       <p>{errorHandler(error)}</p>
@@ -288,7 +311,7 @@ export function ErrorState({ error, onRetry }) {
           Try again <ArrowUpRight size={15} />
         </Button>
       )}
-    </div>
+    </motion.div>
   );
 }
 export function Pagination({ page, total = 0, limit = 20, onChange }) {
@@ -326,8 +349,25 @@ export function Tabs({ items, value, onChange }) {
           aria-pressed={value === i.value}
           className={value === i.value ? 'active' : ''}
           onClick={() => onChange(i.value)}
+          style={{ position: 'relative' }}
         >
-          {i.label}
+          {value === i.value && (
+            <motion.span
+              layoutId="nova-tab-indicator"
+              transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 999,
+                background:
+                  'linear-gradient(115deg, rgba(103,232,249,0.16), rgba(167,139,250,0.14))',
+                border: '1px solid rgba(103,232,249,0.28)',
+                zIndex: 0
+              }}
+            />
+          )}
+          <span style={{ position: 'relative', zIndex: 1 }}>{i.label}</span>
         </button>
       ))}
     </div>
